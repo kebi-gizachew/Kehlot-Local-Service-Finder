@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehelot User Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+     .back-link {
+            display: block;
+            color: gray;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 50px;
+        }
+        .back-link:hover{
+            color:  #2893cc;
+        }
+</style>
+<body>
+    <div class="kehelot-container">
+        <div class="header">
+            <div class="kehelot-user">Kehelot</div>
+            <div class="user-portal">User Portal</div>
+        </div>
+        
+        <div class="form-container">
+            <!-- Toggle Buttons -->
+            <div class="buttons-container">
+                <div class="buttons">
+                    <button class="toggle-btn active" id="loginBtn">Login</button>
+                    <button class="toggle-btn" id="signupBtn">Sign Up</button>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i>
+                <span id="messageText"></span>
+            </div>
+
+            <!-- Form Wrapper -->
+            <div class="form-wrapper">
+                <!-- Login Form -->
+                <form class="form active" id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input id="loginEmail" type="email" placeholder="your.email@example.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input id="loginPassword" type="password" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="forgot-password">
+                        <a href="#" class="forget-link">Forgot Password?</a>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="submit-btn" id="loginSubmitBtn">
+                            Login to Account
+                        </button>
+                    </div>
+                    
+                    <div class="switch-form">
+                        Don't have an account? 
+                        <span class="switch-link" id="switchToSignup">Sign up here</span>
+                    </div>
+                </form>
+
+                <!-- Signup Form -->
+                <form class="form" id="signupForm">
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input id="signupName" type="text" placeholder="John Doe" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signupEmail">Email Address</label>
+                        <input id="signupEmail" type="email" placeholder="your.email@example.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input id="signupPassword" type="password" placeholder="••••••••" required minlength="8">
+                        <small style="display: block; margin-top: 5px; color: #6b7280; font-size: 12px;">
+                            Must be at least 8 characters
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input id="confirmPassword" type="password" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="submit-btn signup" id="signupSubmitBtn">
+                            Create Account
+                        </button>
+                    </div>
+                    
+                    <div class="divider">
+                        <span>or</span>
+                    </div>
+                    
+                    <div class="social-login">
+                        <button type="button" class="social-btn google-btn">
+                            <i class="fab fa-google"></i> Sign up with Google
+                        </button>
+                    </div>
+                    
+                    <div class="terms">
+                        By signing up, you agree to our 
+                        <a href="#" class="terms-link">Terms of Service</a> and 
+                        <a href="#" class="terms-link">Privacy Policy</a>
+                    </div>
+                    
+                    <div class="switch-form">
+                        Already have an account? 
+                        <span class="switch-link" id="switchToLogin">Login here</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <a href="index.html" class="back-link">← Back to Get Started</a>
+
+    <script src="script.js"></script>
+</body>
+</html>
