@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// ===============================
+// Prisma Client Generator
+// ===============================
+generator client {
+  provider = "prisma-client-js"
+   url      = env("DATABASE_URL")
+
+}
+
+// ===============================
+// Database Connection
+// ===============================
+datasource db {
+  provider = "postgresql"
+}
+
+// ===============================
+// ENUMS (User Roles)
+// ===============================
+enum Role {
+  ADMIN
+  PROVIDER
+  USER
+}
+
+// ===============================
+// USER MODEL (AUTHENTICATION CORE)
+// ===============================
+model User {
+  id                 Int      @id @default(autoincrement())
+  fullName           String
+  email              String   @unique
+  password           String
+  role               Role
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  // Relations
+  providerProfile ServiceProvider?
+ // reviewsGiven     Review[]        @relation("UserReviews")
+  //messagesSent     Message[]       @relation("SentMessages")
+  //messagesReceived Message[]       @relation("ReceivedMessages")
+}
+
+// ===============================
+// SERVICE PROVIDER PROFILE
+// ===============================
+enum ServiceType {
+  ELECTRICIAN
+  MECHANIC
+  CLEANER
+  PAINTING_CONTRACTOR
+  CARPENTER
+  PLUMBER
+}
+
+model ServiceProvider {
+  id              Int         @id @default(autoincrement())
+  userId          Int         @unique
+  user            User        @relation(fields: [userId], references: [id])
+
+  serviceType     ServiceType
+  location        String
+  phone           String
+  bio             String
+  profileImage    String?
+
+  // Admin-only verification data (NOT exposed)
+  faydaId         String
+  verificationDoc String
+
+  createdAt       DateTime    @default(now())
+
+  // Relations
+  //reviewsReceived Review[]
+}
+
+// ===============================
+// REVIEW & RATING
+// ===============================
+/* model Review {
+  id         Int      @id @default(autoincrement())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  userId     Int
+  providerId Int
+
+  //user       User            @relation("UserReviews", fields: [userId], references: [id])
+  //provider   ServiceProvider @relation(fields: [providerId], references: [id])
+}
+
+// ===============================
+// REAL-TIME CHAT / MESSAGING
+// ===============================
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String?
+  imageUrl   String?
+  seen       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  senderId   Int
+  receiverId Int
+
+  sender     User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+ */
