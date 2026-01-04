@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehlot - Ethiopia's Trusted Skill Finder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0F98B3; 
+            --primary-dark: #0d839a;
+            --text-dark: #0f172a;
+            --text-gray: #64748b;
+            --bg-light: #f8fafc;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { color: var(--text-dark); line-height: 1.6; background: var(--white); overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* --- NAVIGATION --- */
+        .navbar { height: 85px; display: flex; align-items: center; background: var(--white); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #f1f5f9; }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo { font-size: 28px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 12px; text-decoration: none; cursor: pointer; flex: 1; }
+        .logo-box { background: var(--primary); color: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .nav-links { display: flex; list-style: none; gap: 35px; flex: 2; justify-content: center; }
+        .nav-links a { text-decoration: none; color: var(--text-dark); font-weight: 500; transition: 0.3s; cursor: pointer; }
+        .nav-links a:hover { color: var(--primary); }
+        .nav-spacer { flex: 1; } 
+
+        /* --- PAGE SECTIONS --- */
+        .page-section { display: none; }
+        #home-page { display: block; }
+
+        /* --- HERO --- */
+        .hero { padding: 100px 0; background: radial-gradient(circle at top right, #f0f9ff, var(--white)); }
+        .hero-flex { display: flex; align-items: center; justify-content: space-between; gap: 60px; }
+        .hero-content { flex: 1; }
+        .hero h1 { font-size: 4.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -2px; }
+        .hero h1 .brand { color: var(--primary); }
+        .hero p { font-size: 1.25rem; color: var(--text-gray); margin-bottom: 40px; max-width: 550px; }
+        
+        .image-circle-mask { 
+            width: 550px; 
+            height: 550px; 
+            border-radius: 50%; 
+            overflow: hidden; 
+            border: 20px solid rgba(255, 255, 255, 0.8); 
+            box-shadow: 0 40px 80px rgba(0,0,0,0.08); 
+            position: relative;
+        }
+        .image-circle-mask img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block;
+        }
+
+        .btn-main { background: var(--primary); color: var(--white); padding: 18px 45px; border-radius: 12px; font-weight: 700; font-size: 1.1rem; border: none; cursor: pointer; transition: 0.3s; }
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(15, 152, 179, 0.3); }
+
+        /* --- HOME GRIDS --- */
+        .section-padding { padding: 80px 0; }
+        .section-title { text-align: center; font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; }
+        .section-subtitle { text-align: center; color: var(--text-gray); margin-bottom: 50px; font-size: 1.1rem; }
+        
+        .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .how-card { text-align: center; }
+        .icon-circle { width: 80px; height: 80px; background: #e7f5f7; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--primary); font-size: 2rem; }
+        
+        .why-section { background: var(--white); padding: 100px 0; }
+        .why-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; }
+        .feature-box { 
+            background: var(--white); 
+            padding: 40px 30px; 
+            border-radius: 20px; 
+            border: 1px solid #f1f5f9; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            text-align: left;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .feature-box:hover { 
+            transform: translateY(-12px); 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+        .feature-box i { 
+            width: 50px;
+            height: 50px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem; 
+            color: #334155; 
+            margin-bottom: 25px; 
+        }
+        .feature-box h4 { font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; color: #1e293b; }
+        .feature-box p { color: var(--text-gray); font-size: 0.95rem; line-height: 1.5; }
+
+        /* --- INTERNAL CONTENT --- */
+        .internal-hero { padding: 80px 0 40px; text-align: center; }
+        .internal-hero h1 { font-size: 4rem; font-weight: 800; margin-bottom: 15px; }
+        .services-desc { font-size: 1.4rem; color: #444; max-width: 1000px; margin: 40px auto; line-height: 1.8; text-align: center; }
+
+        /* CONTACT CARDS */
+        .contact-stack { display: flex; flex-direction: column; gap: 20px; align-items: center; margin-top: 40px; }
+        .contact-item { background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 16px; display: flex; align-items: center; gap: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--border); }
+        .contact-icon { width: 60px; height: 60px; background: #f0faff; color: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+        /* --- FOOTER --- */
+        .kehlot-footer { padding: 80px 0 40px; background: white; border-top: 1px solid var(--border); margin-top: 60px; }
+        .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; gap: 40px; margin-bottom: 60px; }
+        .footer-brand h2 { color: var(--primary); font-size: 24px; margin-bottom: 20px; font-weight: 800; }
+        .footer-brand p { color: var(--text-gray); max-width: 300px; margin-bottom: 25px; }
+        .footer-col h4 { font-size: 18px; margin-bottom: 25px; font-weight: 700; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 15px; }
+        .footer-col ul li a { text-decoration: none; color: var(--text-gray); transition: 0.3s; cursor: pointer; }
+        .footer-col ul li a:hover { color: var(--primary); }
+        .contact-info li { display: flex; align-items: center; gap: 12px; color: var(--text-gray); margin-bottom: 15px;}
+        .contact-info i { color: var(--primary); font-size: 18px; width: 20px; }
+        .admin-login-btn { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border: 1.5px solid var(--primary); color: var(--primary); border-radius: 8px; text-decoration: none; font-weight: 600; width: fit-content; transition: 0.3s; cursor: pointer;}
+        .admin-login-btn:hover { background: var(--primary); color: white; }
+        .copyright-bar { text-align: center; border-top: 1px solid var(--border); padding-top: 40px; color: var(--text-gray); font-size: 14px; }
+
+        @media (max-width: 992px) {
+            .hero-flex, .footer-grid { flex-direction: column; text-align: center; }
+            .hero h1 { font-size: 3rem; }
+            .why-grid { grid-template-columns: 1fr 1fr; }
+            .image-circle-mask { width: 350px; height: 350px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a onclick="showSection('home-page')" class="logo">
+                <div class="logo-box">K</div> Kehlot
+            </a>
+            <ul class="nav-links">
+                <li><a onclick="showSection('home-page')">Home</a></li>
+                <li><a onclick="showSection('services-page')">Service</a></li>
+                <li><a onclick="showSection('about-page')">About</a></li>
+                <li><a onclick="showSection('contact-page')">Contact</a></li>
+            </ul>
+            <div class="nav-spacer"></div>
+        </div>
+    </nav>
+
+    <div id="home-page" class="page-section">
+        <section class="hero">
+            <div class="container hero-flex">
+                <div class="hero-content">
+                    <h1>Solution For Everyday <span class="brand">Problems Solved</span></h1>
+                    <p>Ethiopia's premier platform to find trusted local skilled service providers near you. High-quality work and direct connections with experts.</p>
+                    <button class="btn-main" onclick="location.href='portal.html'">Get Started</button>
+                </div>
+                <div class="image-circle-mask">
+                    <img src="./images/image.png" alt="Our Skilled Professionals">
+                </div>
+            </div>
+        </section>
+
+        <section class="section-padding">
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <div class="how-grid">
+                    <div class="how-card"><div class="icon-circle"><i class="ri-search-2-line"></i></div><h3>Choose Service</h3><p>Select the skill you need.</p></div>
+                    <div class="how-card"><div class="icon-circle"><i class="ri-shield-user-line"></i></div><h3>Browse Providers</h3><p>Vetted local pros.</p></div>
+                    <div class="how-card"><div class="icon-circle"><i class="ri-customer-service-2-line"></i></div><h3>Connect Directly</h3><p>Chat and get it done.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="why-section">
+            <div class="container">
+                <h2 class="section-title">Why Choose Kehlot?</h2>
+                <p class="section-subtitle">We make it easy to find and connect with the best local service providers.</p>
+                <div class="why-grid">
+                    <div class="feature-box">
+                        <i class="ri-search-line"></i>
+                        <h4>Find Local Experts</h4>
+                        <p>Discover verified service providers in your area with just a few clicks.</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="ri-shield-check-line"></i>
+                        <h4>Verified Providers</h4>
+                        <p>All service providers are thoroughly verified for your peace of mind.</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="ri-chat-3-line"></i>
+                        <h4>Direct Communication</h4>
+                        <p>Chat directly with providers to discuss your needs and get quotes.</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="ri-star-line"></i>
+                        <h4>Trusted Reviews</h4>
+                        <p>Read genuine reviews and ratings from other customers.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="services-page" class="page-section">
+        <div class="container">
+            <div class="internal-hero"><h1>Our Services</h1></div>
+            <p class="services-desc">At Kehlot, we connect you with verified local professionals across Addis Ababa. Whether you need an electrician, plumber, mechanic, painter, or cleaning services, we've got you covered. All our professionals are carefully vetted to ensure quality service and customer satisfaction.</p>
+        </div>
+    </div>
+
+    <div id="about-page" class="page-section">
+        <div class="container">
+            <div class="internal-hero">
+                <h1>About Kehlot</h1>
+                <p>Connecting communities with trusted local professionals</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 50px; margin-top: 40px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h2>Who We Are</h2>
+                    <p>Kehlot is Addis Ababa's premier platform for connecting residents with verified, skilled service providers. We understand the challenges of finding reliable professionals.</p>
+                </div>
+                <div style="flex: 1; min-width: 300px; background: #e7f5f7; height: 300px; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                    <img src='./images/about-image.PNG' style="max-width: 100%; height: auto;" alt="About Kehlot"/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contact-page" class="page-section">
+        <div class="container">
+            <div class="internal-hero"><h1>Contact Us</h1><p>Have questions? We'd love to hear from you</p></div>
+            <div class="contact-stack">
+                <div class="contact-item">
+                    <div class="contact-icon"><i class="ri-phone-fill"></i></div>
+                    <div><h3>Phone</h3><p>+251 911 234 567</p></div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon"><i class="ri-mail-fill"></i></div>
+                    <div><h3>Email</h3><p>info@kehlot.com</p></div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon"><i class="ri-map-pin-fill"></i></div>
+                    <div><h3>Location</h3><p>Addis Ababa, Ethiopia</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="kehlot-footer">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <h2>Kehlot</h2>
+                <p>Connecting you with trusted local service providers in Ethiopia. Built on quality and trust.</p>
+                <a href="admin.html" class="admin-login-btn">
+                    <i class="ri-admin-line"></i> Admin Login
+                </a>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a onclick="showSection('home-page')">Home</a></li>
+                    <li><a onclick="showSection('about-page')">About Us</a></li>
+                    <li><a onclick="showSection('services-page')">Our Services</a></li>
+                    <li><a onclick="showSection('contact-page')">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <ul class="contact-info">
+                    <li><i class="ri-mail-line"></i> info@kehlot.com</li>
+                    <li><i class="ri-phone-line"></i> +251 911 234 567</li>
+                    <li><i class="ri-map-pin-line"></i> Addis Ababa, Ethiopia</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright-bar">
+            <p>&copy; 2025 Kehlot. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.page-section').forEach(sec => sec.style.display = 'none');
+            // Show requested section
+            document.getElementById(sectionId).style.display = 'block';
+            // Smooth scroll to top
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            
+            // Update URL hash for better UX (allows browser back button)
+            if (window.location.hash !== `#${sectionId}`) {
+                history.pushState(null, null, `#${sectionId}`);
+            }
+        }
+
+        // Support for Browser Back/Forward buttons
+        window.onpopstate = () => {
+            const hash = window.location.hash.replace('#', '') || 'home-page';
+            showSection(hash);
+        };
+    </script>
+</body>
+</html>
