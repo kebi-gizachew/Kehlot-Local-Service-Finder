@@ -43,9 +43,9 @@ model User {
 
   // Relations
   providerProfile ServiceProvider?
- // reviewsGiven     Review[]        @relation("UserReviews")
-  //messagesSent     Message[]       @relation("SentMessages")
-  //messagesReceived Message[]       @relation("ReceivedMessages")
+  messagesSent Message[] @relation("sent")
+  messagesReceived Message[] @relation("received")
+  ratingsGiven Rating[]
 }
 
 // ===============================
@@ -74,28 +74,26 @@ model ServiceProvider {
   // Admin-only verification data (NOT exposed)
   faydaId         String
   verificationDoc String
-
   createdAt       DateTime    @default(now())
 
   // Relations
-  //reviewsReceived Review[]
+  ratings       Rating[]
 }
 
 // ===============================
 // REVIEW & RATING
 // ===============================
-/* model Review {
+model Rating {
   id         Int      @id @default(autoincrement())
   rating     Int
-  comment    String?
   createdAt  DateTime @default(now())
 
   // Relations
   userId     Int
   providerId Int
 
-  //user       User            @relation("UserReviews", fields: [userId], references: [id])
-  //provider   ServiceProvider @relation(fields: [providerId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  provider ServiceProvider @relation(fields: [providerId], references: [id])
 }
 
 // ===============================
@@ -105,14 +103,13 @@ model Message {
   id         Int      @id @default(autoincrement())
   content    String?
   imageUrl   String?
-  seen       Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   // Relations
   senderId   Int
   receiverId Int
 
-  sender     User @relation("SentMessages", fields: [senderId], references: [id])
-  receiver   User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender   User @relation("sent", fields: [senderId], references: [id])
+  receiver User @relation("received", fields: [receiverId], references: [id])
 }
- */
+ 

@@ -6,8 +6,14 @@ import { connectDB, disconnectDB } from "./config/db.js";
 
 // Import routes
 import authRoutes from "./routes/authRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
 import providerRoutes from "./routes/providerRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+import ratingRoutes from "./routes/ratingRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import { initSocket } from "./utils/socket.js";
+
+
 
 
 // Initialize app
@@ -34,10 +40,15 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/provider", providerRoutes);
+app.use("/users", userRoutes);
+// Messages: keep existing mount and add an /api/messages alias for compatibility
+app.use("/messages", messageRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/ratings", ratingRoutes);
 
 // Health check
-app.get("/", (req, res) => {
-  res.json({ message: "SkillAddis API is running" });
+app.get("/", (req, res) => {  
+  res.json({ message: "Kihlot API is running" });
 });
 
 // --------------------
@@ -48,6 +59,14 @@ const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(` Server running on PORT ${PORT}`);
 });
+
+// Initialize Socket.IO
+try {
+  initSocket(server);
+  console.log("Socket.IO initialized");
+} catch (err) {
+  console.error("Failed to initialize Socket.IO:", err);
+}
 
 // --------------------
 // Error & Shutdown Handling

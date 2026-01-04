@@ -128,27 +128,75 @@ const changePassword = async (req, res) => {
 /**
  * GET PROFILE (Provider)
  */
-const getProfile = async (req, res) => {
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    include: { serviceProvider: true },
-  });
+const getProviderProfile = async (req, res) => {
+  try {
+    // If a provider id param is present, fetch by ServiceProvider.id (public profile)
+    const providerIdParam = req.params?.id;
 
-  if (!user || user.role !== "PROVIDER") {
-    return res.status(403).json({ message: "Access denied" });
+    if (providerIdParam) {
+      const provider = await prisma.serviceProvider.findUnique({
+        where: { id: Number(providerIdParam) },
+        include: { user: true, ratings: true },
+      });
+
+      if (!provider) {
+        return res.status(404).json({ message: "Provider not found" });
+      }
+
+      const avg = provider.ratings && provider.ratings.length ? provider.ratings.reduce((s, r) => s + r.rating, 0) / provider.ratings.length : null;
+
+      return res.json({
+        id: provider.id,
+        fullName: provider.user?.fullName || null,
+        email: provider.user?.email || null,
+        phone: provider.phone,
+        location: provider.location,
+        serviceType: provider.serviceType,
+        bio: provider.bio,
+        profileImage: provider.profileImage,
+        averageRating: avg,
+        createdAt: provider.createdAt,
+      });
+    }
+
+    // Fallback: authenticated provider fetching their own profile
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { serviceProvider: true },
+    });
+
+    if (!user || user.role !== "PROVIDER") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    res.json({
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.serviceProvider?.phone,
+      location: user.serviceProvider?.location,
+      serviceType: user.serviceProvider?.serviceType,
+      bio: user.serviceProvider?.bio,
+      faydaId: user.serviceProvider?.faydaId,
+      verificationDoc: user.serviceProvider?.verificationDoc,
+    });
+  } catch (err) {
+    console.error("getProviderProfile error:", err);
+
+    if (err?.code === "P2022") {
+      return res.status(500).json({
+        success: false,
+        message:
+          "Database schema mismatch detected while fetching provider profile. Try running `npx prisma generate` and apply pending migrations (`npx prisma migrate deploy` or `npx prisma migrate dev`) or `npx prisma db push`.",
+      });
+    }
+
+    return res.status(500).json({ message: "Server error while fetching provider profile" });
   }
-
-  res.json({
-    id: user.id,
-    fullName: user.fullName,
-    email: user.email,
-    phone: user.serviceProvider?.phone,
-    location: user.serviceProvider?.location,
-    serviceType: user.serviceProvider?.serviceType,
-    bio: user.serviceProvider?.bio,
-    faydaId: user.serviceProvider?.faydaId,
-    verificationDoc: user.serviceProvider?.verificationDoc,
-  });
 };
 
 /**
@@ -193,4 +241,140 @@ const logout = (req, res) => {
 };
 
 
-export {registerUser, login, changePassword, logout, getProfile};
+const getProvidersByCategory = async (req, res) => {
+  try {
+    const { serviceType } = req.params;
+    const { location } = req.query;
+
+    // Validate input
+    if (!serviceType) {
+      return res.status(400).json({
+        success: false,
+        message: "Service type is required",
+      });
+    }
+
+    // Normalize and validate against known enum values
+    const normalized = String(serviceType).toUpperCase();
+    const validTypes = [
+      "ELECTRICIAN",
+      "MECHANIC",
+      "CLEANER",
+      "PAINTING_CONTRACTOR",
+      "CARPENTER",
+      "PLUMBER",
+    ];
+
+    if (!validTypes.includes(normalized)) {
+      return res.status(400).json({ success: false, message: "Invalid service type" });
+    }
+
+    // Build where clause with optional location filter (case-insensitive)
+    const where = { serviceType: normalized };
+    if (location) {
+      where.location = { contains: String(location), mode: "insensitive" };
+    }
+
+    // Fetch providers and include related user and ratings
+    const providersRaw = await prisma.serviceProvider.findMany({
+      where,
+      include: {
+        user: { select: { fullName: true, email: true } },
+        ratings: { select: { rating: true } },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Map to response shape and compute averageRating
+    const providers = providersRaw.map((p) => {
+      const avg = p.ratings && p.ratings.length ? p.ratings.reduce((s, r) => s + r.rating, 0) / p.ratings.length : null;
+
+      return {
+        id: p.id,
+        fullName: p.user?.fullName || null,
+        email: p.user?.email || null,
+        serviceType: p.serviceType,
+        location: p.location,
+        bio: p.bio,
+        phone: p.phone,
+        profileImage: p.profileImage,
+        averageRating: avg,
+        createdAt: p.createdAt,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: providers.length,
+      data: providers,
+    });
+  } catch (error) {
+    console.error("Get providers by category error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching providers",
+    });
+  }
+};
+
+const filterProvidersByCategories = async (req, res) => {
+  try {
+    const { categories } = req.body;
+    if (!Array.isArray(categories) || categories.length === 0) {
+      return res.status(400).json({ success: false, message: "categories array is required" });
+    }
+
+    const validTypes = [
+      "ELECTRICIAN",
+      "MECHANIC",
+      "CLEANER",
+      "PAINTING_CONTRACTOR",
+      "CARPENTER",
+      "PLUMBER",
+    ];
+
+    const normalized = categories
+      .map((c) => String(c).toUpperCase().trim())
+      .filter((c) => validTypes.includes(c));
+
+    if (normalized.length === 0) {
+      return res.status(400).json({ success: false, message: "No valid categories provided" });
+    }
+
+    const providersRaw = await prisma.serviceProvider.findMany({
+      where: { serviceType: { in: normalized } },
+      include: {
+        user: { select: { id: true, fullName: true, email: true } },
+        ratings: { select: { rating: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const providers = providersRaw.map((p) => {
+      const avg = p.ratings && p.ratings.length ? p.ratings.reduce((s, r) => s + r.rating, 0) / p.ratings.length : null;
+
+      return {
+        id: p.user.id,
+        fullName: p.user?.fullName || null,
+        email: p.user?.email || null,
+        serviceType: p.serviceType,
+        location: p.location,
+        bio: p.bio,
+        phone: p.phone,
+        profileImage: p.profileImage,
+        averageRating: avg,
+        createdAt: p.createdAt,
+      };
+    });
+
+    return res.status(200).json({ success: true, count: providers.length, data: providers });
+  } catch (error) {
+    console.error('filterProvidersByCategories error:', error);
+    return res.status(500).json({ success: false, message: "Server error while filtering providers" });
+  }
+};
+
+export {registerUser, login, changePassword, logout, getProviderProfile, getProvidersByCategory, filterProvidersByCategories};
