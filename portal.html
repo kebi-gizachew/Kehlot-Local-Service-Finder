@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehlot - Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0F98B3;
+            --bg: #F8FAFC;
+            --text-dark: #1F2937;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+            --white: #FFFFFF;
+            --error: #EF4444;
+            --success: #10B981;
+        }
+
+        /* --- BASE RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* --- TOAST SYSTEM --- */
+        #toast-container {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .toast {
+            padding: 12px 24px; border-radius: 8px; color: white; font-size: 14px;
+            font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease forwards; display: flex; align-items: center; gap: 8px;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* --- MESSAGE ATTACHMENT STYLING --- */
+        .msg-img-attachment {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+        }
+
+        /* --- HEADER --- */
+        header { padding: 24px 60px; display: flex; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; color: var(--text-dark); text-decoration: none; }
+        .logo-box { background: var(--primary); color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+        /* --- MAIN CONTENT --- */
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 20px 60px 20px; }
+        .view-section { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .active-view { display: flex; }
+
+        /* --- TITLES --- */
+        h1 { font-size: 32px; font-weight: 700; margin-bottom: 12px; text-align: center; }
+        .subtitle-main { color: var(--text-muted); font-size: 16px; margin-bottom: 48px; text-align: center; }
+
+        /* --- PORTAL CARDS --- */
+        .cards-container { display: flex; gap: 24px; margin-bottom: 40px; }
+        .role-card { background: var(--white); width: 340px; padding: 48px 32px; border-radius: 24px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .role-card.seeker-highlight { border-color: var(--primary); box-shadow: 0 4px 20px rgba(15, 152, 179, 0.05); }
+        .role-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        .icon-box { width: 64px; height: 64px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 24px; }
+        .seeker-icon { background: var(--primary); color: white; }
+        .provider-icon { background: #FFF7ED; color: #F97316; border-radius: 50%; }
+        .role-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+        .role-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+        .continue-link { color: var(--primary); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .back-home-pill { background: white; border: 1px solid var(--border); padding: 10px 24px; border-radius: 50px; color: var(--text-muted); font-weight: 500; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+
+        /* --- AUTH BOXES --- */
+        .back-container { width: 100%; max-width: 400px; margin-bottom: 12px; display: flex; }
+        .back-link { color: #94A3B8; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500; }
+        .auth-box { background: var(--white); width: 100%; max-width: 400px; padding: 32px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.05); text-align: center; }
+        .auth-box h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        .subtitle-auth { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .form-group { text-align: left; margin-bottom: 16px; }
+        label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; color: #374151; }
+        .input-wrapper { position: relative; }
+        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 14px; }
+        input { width: 100%; padding: 12px 12px 12px 42px; border: 1px solid #D1D5DB; border-radius: 10px; font-size: 14px; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 152, 179, 0.08); }
+        .btn-teal { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        .footer-link { margin-top: 24px; font-size: 13px; color: var(--text-muted); }
+        .footer-link span { color: var(--primary); font-weight: 600; cursor: pointer; }
+        .info-box { background: #F0F9FB; border: 1px solid #CFEAF0; padding: 12px; border-radius: 10px; display: flex; gap: 10px; margin-bottom: 20px; text-align: left; }
+        .info-box i { color: var(--primary); font-size: 14px; margin-top: 2px; }
+        .info-box p { font-size: 12px; color: #4B5563; line-height: 1.4; }
+
+        @media (max-width: 768px) { .cards-container { flex-direction: column; } header { padding: 24px 20px; } }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <header>
+        <div class="logo"><div class="logo-box">K</div> Kehlot</div>
+    </header>
+
+    <main>
+        <section id="portal" class="view-section active-view">
+            <h1>How would you like to use Kehlot?</h1>
+            <p class="subtitle-main">Select your role to continue</p>
+            <div class="cards-container">
+                <div class="role-card seeker-highlight" onclick="showView('seeker-signin')">
+                    <div class="icon-box seeker-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <h2>Service Seeker</h2>
+                    <p>I am looking for skilled service providers to help with my needs.</p>
+                    <div class="continue-link">Continue <i class="fa-solid fa-arrow-right"></i></div>
+                </div>
+                <div class="role-card" onclick="showView('provider-login')">
+                    <div class="icon-box provider-icon"><i class="fa-solid fa-wrench"></i></div>
+                    <h2>Service Provider</h2>
+                    <p>I am a professional offering services to customers in my area.</p>
+                    <div class="continue-link">Continue <i class="fa-solid fa-arrow-right"></i></div>
+                </div>
+            </div>
+            <button class="back-home-pill" onclick="window.history.back()">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </button>
+        </section>
+
+        <section id="seeker-signin" class="view-section">
+            <div class="back-container"><div class="back-link" onclick="showView('portal')"><i class="fa-solid fa-arrow-left"></i> Back</div></div>
+            <div class="auth-box">
+                <h2>Welcome Back</h2>
+                <p class="subtitle-auth">Sign in to find service providers</p>
+                <div class="form-group">
+                    <label>Email</label>
+                    <div class="input-wrapper"><i class="fa-regular fa-envelope"></i><input type="email" id="in-email" placeholder="Enter your email"></div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-lock"></i><input type="password" id="in-pass" placeholder="Enter your password"></div>
+                </div>
+                <button class="btn-teal" onclick="handleSignIn()">Sign In</button>
+                <p class="footer-link">Don't have an account? <span onclick="showView('seeker-signup')">Sign up</span></p>
+            </div>
+        </section>
+
+        <section id="seeker-signup" class="view-section">
+            <div class="back-container"><div class="back-link" onclick="showView('seeker-signin')"><i class="fa-solid fa-arrow-left"></i> Back</div></div>
+            <div class="auth-box">
+                <h2>Create Account</h2>
+                <p class="subtitle-auth">Join Kehlot to find professionals</p>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <div class="input-wrapper"><i class="fa-regular fa-user"></i><input type="text" id="up-name" placeholder="Enter full name"></div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <div class="input-wrapper"><i class="fa-regular fa-envelope"></i><input type="email" id="up-email" placeholder="Enter email"></div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-lock"></i><input type="password" id="up-pass" placeholder="Create password"></div>
+                </div>
+                <button class="btn-teal" onclick="handleSignUp()">Create Account</button>
+                <p class="footer-link">Already have an account? <span onclick="showView('seeker-signin')">Sign in</span></p>
+            </div>
+        </section>
+
+        <section id="provider-login" class="view-section">
+            <div class="back-container"><div class="back-link" onclick="showView('portal')"><i class="fa-solid fa-arrow-left"></i> Back</div></div>
+            <div class="auth-box">
+                <h2>Provider Login</h2>
+                <p class="subtitle-auth">Manage your services</p>
+                <div class="info-box">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <p>Access requires an official @kehlot.com email and a unique 8-digit corporate PIN.</p>
+                </div>
+                <div class="form-group">
+                    <label>Corporate Email</label>
+                    <div class="input-wrapper"><i class="fa-regular fa-envelope"></i><input type="email" id="prov-email" placeholder="name@kehlot.com"></div>
+                </div>
+                <div class="form-group">
+                    <label>8-Digit PIN</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-key"></i><input type="password" id="prov-key" placeholder="Enter your PIN" maxlength="8"></div>
+                </div>
+                <button class="btn-teal" onclick="handleProviderLogin()">Sign In</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- 1. DEFENSIVE HELPERS ---
+        const getInitial = (name = '') =>
+            name.trim() ? name.trim()[0].toUpperCase() : '?';
+
+        // --- 2. NAVIGATION ---
+        function showView(id) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(id).classList.add('active-view');
+            window.scrollTo(0,0);
+        }
+
+        // --- 3. NOTIFICATION UI ---
+        function notify(msg, isError = true) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.backgroundColor = isError ? '#EF4444' : '#10B981';
+            toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-xmark' : 'fa-circle-check'}"></i> ${msg}`;
+            container.appendChild(toast);
+            
+            setTimeout(() => { 
+                toast.style.opacity = '0'; 
+                setTimeout(() => toast.remove(), 500); 
+            }, 3000);
+        }
+
+        // --- 4. MESSAGE RENDERER ---
+        function renderMessage(msgData) {
+            let content = '';
+            if (msgData.attachment_url) {
+                content += `<img src="${msgData.attachment_url}" class="msg-img-attachment" alt="Attached image message" />`;
+            }
+            if (msgData.text?.trim()) {
+                content += `<div class="msg-text">${msgData.text}</div>`;
+            }
+            return content;
+        }
+
+        // --- 5. AUTHENTICATION ---
+
+        async function handleSignIn() {
+            const email = document.getElementById('in-email').value.trim();
+            const pass = document.getElementById('in-pass').value;
+            if(!email || !pass) return notify("Please fill in all fields");
+            notify("Verifying with server...", false);
+            setTimeout(() => {
+                const mockResponse = { token: "jwt_abc_123", role: "seeker" };
+                if (mockResponse.role === 'seeker') {
+                    notify("Success! Redirecting...", false);
+                    // Redirect seeker to question.html
+                    setTimeout(() => { window.location.href = 'question.html'; }, 700);
+                }
+            }, 1000);
+        }
+
+        async function handleSignUp() {
+            const name = document.getElementById('up-name').value.trim();
+            const email = document.getElementById('up-email').value.trim();
+            const pass = document.getElementById('up-pass').value;
+            if(!name || !email || !pass) return notify("All fields are required");
+            if(!email.includes('@')) return notify("Invalid email address");
+            notify("Creating your account...", false);
+            setTimeout(() => {
+                notify("Account created! Redirecting to questions...", false);
+                // After sign-up, send seeker to question.html
+                setTimeout(() => { window.location.href = 'question.html'; }, 900);
+            }, 1500);
+        }
+
+        async function handleProviderLogin() {
+            const email = document.getElementById('prov-email').value.trim().toLowerCase();
+            const key = document.getElementById('prov-key').value.trim();
+
+            if(!email.endsWith("@kehlot.com")) {
+                return notify("Access Denied: Use your official @kehlot.com email.");
+            }
+
+            // UPDATED: Validating for 8 digits
+            if(!/^\d{8}$/.test(key)) {
+                return notify("PIN must be exactly 8 digits.");
+            }
+
+            notify("Authenticating corporate identity...", false);
+
+            setTimeout(() => {
+                const mockResponse = {
+                    token: "jwt_provider_456",
+                    role: "provider"
+                };
+
+                if (mockResponse.role === 'provider') {
+                    notify("Authorized. Welcome.", false);
+                    // NEW: Redirect to provider dashboard
+                    window.location.href = 'provider.html?id=P-4821';
+                }
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
