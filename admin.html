@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehlot | Admin Executive Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { 
+                        kihlot: { 
+                            primary: '#0F98B3', 
+                            hover: '#0d8199',
+                            light: 'rgba(15, 152, 179, 0.1)',
+                            bg: '#f4f7fe'
+                        } 
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f7fe; color: #1b2559; overflow-x: hidden; }
+        .glass-card { background: white; border-radius: 20px; box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12); border: none; }
+        .nav-link.active { color: #1b2559; border-right: 4px solid #0F98B3; font-weight: 800; background: linear-gradient(90deg, rgba(15, 152, 179, 0.1) 0%, rgba(15, 152, 179, 0) 100%); }
+        .page-view { display: none; animation: fadeIn 0.3s ease; }
+        .page-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        input, select, textarea { 
+            border: 1px solid #e0e5f2 !important; 
+            border-radius: 14px !important; 
+            padding: 14px 18px !important; 
+            background-color: #f8fafc !important; 
+            width: 100%; 
+            font-weight: 500; 
+            color: #1b2559; 
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus { border-color: #0F98B3 !important; outline: none; background-color: #ffffff !important; box-shadow: 0 0 0 4px rgba(15, 152, 179, 0.1); }
+        label { font-size: 11px; font-weight: 800; margin-bottom: 8px; display: block; color: #a3b1cc; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; }
+        .toast { min-width: 300px; padding: 16px 20px; border-radius: 12px; margin-bottom: 12px; color: white; font-weight: 600; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: 0.3s ease; }
+        
+        button:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .user-table th { text-align: left; color: #a3b1cc; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 15px; border-bottom: 1px solid #e0e5f2; }
+        .user-table td { padding: 15px; border-bottom: 1px solid #f4f7fe; font-weight: 700; font-size: 14px; }
+    </style>
+</head>
+<body class="flex">
+
+    <div id="login-gate" class="fixed inset-0 bg-kihlot-bg z-[100] flex items-center justify-center p-6">
+        <div class="glass-card p-10 w-full max-w-md shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-kihlot-primary rounded-2xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4 hover:scale-105 transition-transform">K</div>
+                <h2 class="text-2xl font-black">Executive Login</h2>
+                <p class="text-slate-400 text-sm">Access the Kehlot Command Center</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label>Admin Email</label>
+                    <input type="email" id="adminEmail" placeholder="admin@kehlot.com" required>
+                </div>
+                <div>
+                    <label>Access Password</label>
+                    <input type="password" id="adminPass" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="w-full py-4 bg-kihlot-primary text-white rounded-2xl font-bold hover:bg-kihlot-hover transition-all mt-2">
+                    Verify & Authenticate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <aside id="main-sidebar" class="hidden fixed left-0 top-0 h-screen w-72 bg-white p-8 flex flex-col z-50 shadow-sm">
+        <div class="flex items-center gap-3 mb-12 px-4 group">
+            <div class="w-10 h-10 bg-kihlot-primary rounded-xl flex items-center justify-center text-white font-bold text-xl group-hover:rotate-6 transition-transform">K</div>
+            <h1 class="text-2xl font-extrabold tracking-tight">Kehlot<span class="text-kihlot-primary">.</span></h1>
+        </div>
+        <nav class="flex-1 space-y-4">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Management</p>
+            <button onclick="showPage('overview')" id="nav-overview" class="nav-link active w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </button>
+            <button onclick="prepareAddMode()" id="nav-add" class="nav-link w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-user-plus"></i> Add Provider
+            </button>
+            <button onclick="showPage('edit')" id="nav-edit" class="nav-link w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-list-check"></i> Manage Directory
+            </button>
+            <button onclick="showPage('users')" id="nav-users" class="nav-link w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-users-viewfinder"></i> View Users
+            </button>
+            <div class="pt-10">
+                <button onclick="logout()" class="w-full flex items-center gap-4 px-6 py-4 text-red-400 hover:bg-red-50 rounded-2xl font-bold transition-all">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
+            </div>
+        </nav>
+    </aside>
+
+    <main id="main-content" class="hidden ml-72 flex-1 p-10">
+        
+        <section id="page-overview" class="page-view active">
+            <div class="mb-10">
+                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Security Verified</p>
+                <h2 class="text-3xl font-black">Executive Dashboard</h2>
+            </div>
+            <div class="grid grid-cols-3 gap-6 mb-10">
+                <div class="glass-card p-6 flex items-center gap-6 border-l-4 border-kihlot-primary cursor-pointer hover:scale-[1.02] transition-transform" onclick="showPage('users')">
+                    <div class="w-14 h-14 bg-kihlot-light text-kihlot-primary rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-users"></i></div>
+                    <div><p class="text-xs font-black text-slate-400 uppercase">Total Users</p><h3 class="text-2xl font-black" id="stat-users">0</h3></div>
+                </div>
+                <div class="glass-card p-6 flex items-center gap-6 border-l-4 border-kihlot-primary">
+                    <div class="w-14 h-14 bg-kihlot-light text-kihlot-primary rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-toolbox"></i></div>
+                    <div><p class="text-xs font-black text-slate-400 uppercase">Providers</p><h3 class="text-2xl font-black" id="stat-providers">0</h3></div>
+                </div>
+                <div class="glass-card p-6 flex items-center gap-6 border-l-4 border-orange-400">
+                    <div class="w-14 h-14 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-star"></i></div>
+                    <div><p class="text-xs font-black text-slate-400 uppercase">Avg Rating</p><h3 class="text-2xl font-black">4.9</h3></div>
+                </div>
+            </div>
+            <div class="glass-card p-8">
+                <h4 class="font-bold mb-6 text-slate-700">Service Activity Trends</h4>
+                <div class="h-64">
+                    <canvas id="mainTrendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-add" class="page-view">
+            <div class="glass-card p-12 max-w-5xl mx-auto">
+                <div class="mb-10 flex justify-between items-start">
+                    <div>
+                        <h2 id="form-title" class="text-3xl font-black text-[#1b2559]">Add Service Provider</h2>
+                        <p id="form-subtitle" class="text-slate-400 font-medium mt-1">Register a new service provider to the platform</p>
+                    </div>
+                </div>
+                <form id="providerForm" class="grid grid-cols-2 gap-x-10 gap-y-8">
+                    <div class="space-y-1">
+                        <label>Full Name *</label>
+                        <input type="text" id="pName" placeholder="Enter full name" required minlength="3">
+                    </div>
+                    <div class="space-y-1">
+                        <label>Email *</label>
+                        <input type="email" id="pEmail" placeholder="Enter email address" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label>Phone Number *</label>
+                        <input type="text" id="pPhone" placeholder="0912345678" maxlength="10" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label>Service Category *</label>
+                        <select id="pService" required>
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="ELECTRICIAN">⚡ ELECTRICIAN</option>
+                            <option value="MECHANIC">🔧 MECHANIC</option>
+                            <option value="CLEANER">🧹 CLEANER</option>
+                            <option value="PAINTING_CONTRACTOR">🎨 PAINTING_CONTRACTOR</option>
+                            <option value="CARPENTER">🔨 CARPENTER</option>
+                            <option value="PLUMBER">🚰 PLUMBER</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2 space-y-1">
+                        <label>Profile Picture URL (Supports Google Drive Links)</label>
+                        <div class="flex gap-4 items-center">
+                            <input type="url" id="pImgUrl" placeholder="Paste image link here...">
+                            <div class="w-16 h-16 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50 shrink-0">
+                                <img id="pImgPreview" src="" class="hidden w-full h-full object-cover">
+                                <i id="pImgPlaceholder" class="fa-solid fa-image text-slate-300"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label>National ID (FAN/FIN) *</label>
+                        <div class="flex gap-2">
+                            <select id="pIdPrefix" class="!w-1/3" required>
+                                <option value="FAN">FAN</option>
+                                <option value="FIN">FIN</option>
+                            </select>
+                            <input type="text" id="pIdNumber" placeholder="Digits only" required>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <label>Location *</label>
+                        <input type="text" id="pLoc" placeholder="Addis Ababa, Bole" required>
+                    </div>
+                    <div class="col-span-2 space-y-1">
+                        <label>Bio *</label>
+                        <textarea id="pBio" rows="4" placeholder="Brief description of experience" required></textarea>
+                    </div>
+                    <div class="col-span-2 flex gap-4 pt-4">
+                        <button type="button" onclick="showPage('edit')" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-all">Cancel Action</button>
+                        <button type="submit" id="submitBtn" disabled class="flex-[2] py-4 bg-kihlot-primary text-white rounded-2xl font-bold text-lg hover:bg-kihlot-hover shadow-lg transition-all">Register Provider</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="page-edit" class="page-view">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold">Service Directory</h2>
+                <div class="glass-card p-2 flex items-center border border-slate-100 w-72">
+                    <i class="fa-solid fa-magnifying-glass text-slate-300 ml-3 mr-2"></i>
+                    <input type="text" id="editSearch" onkeyup="filterDirectory()" placeholder="Filter by name or service..." class="!border-0 !p-1 !bg-transparent text-sm outline-none">
+                </div>
+            </div>
+            <div id="directory-container" class="space-y-4"></div>
+        </section>
+
+        <section id="page-users" class="page-view">
+            <div class="mb-8 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-[#1b2559]">Registered Users</h2>
+                    <p class="text-slate-400 text-sm">Full list of customers currently on the platform</p>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full user-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email Address</th>
+                                <th>Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- IMPROVED GOOGLE DRIVE CONVERTER ---
+        // This ensures IDs are extracted even if the link doesn't end in /view
+        function getDirectDriveUrl(url) {
+            if (!url) return "";
+            const driveRegex = /\/file\/d\/([a-zA-Z0-9_-]+)/;
+            const match = url.match(driveRegex);
+            if (match && match[1]) {
+                return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            }
+            return url; 
+        }
+
+        // --- GLOBAL STATE ---
+        let editingProviderId = null;
+        let providers = [
+            { id: 101, name: "Ahmed Hassan", email: "ahmed@example.com", service: "PLUMBER", loc: "Addis Ababa, Bole", phone: "0911223344", idPrefix: "FAN", idNumber: "1234567890123456", bio: "Experienced plumber.", img: "https://ui-avatars.com/api/?name=Ahmed+Hassan&background=0F98B3&color=fff" }
+        ];
+        const users = [{ name: "John Doe", email: "john.doe@email.com", date: "20/01/2024" }];
+
+        // --- LIVE PREVIEW LOGIC ---
+        const imgInput = document.getElementById('pImgUrl');
+        const imgPreview = document.getElementById('pImgPreview');
+        const imgPlaceholder = document.getElementById('pImgPlaceholder');
+
+        imgInput.addEventListener('input', () => {
+            const rawValue = imgInput.value.trim();
+            const directUrl = getDirectDriveUrl(rawValue);
+            
+            if (directUrl && (directUrl.startsWith('http'))) {
+                imgPreview.src = directUrl;
+                imgPreview.classList.remove('hidden');
+                imgPlaceholder.classList.add('hidden');
+                
+                imgPreview.onerror = function() {
+                    this.classList.add('hidden');
+                    imgPlaceholder.classList.remove('hidden');
+                    imgPlaceholder.className = "fa-solid fa-circle-exclamation text-red-400";
+                };
+            } else {
+                imgPreview.classList.add('hidden');
+                imgPlaceholder.classList.remove('hidden');
+                imgPlaceholder.className = "fa-solid fa-image text-slate-300";
+            }
+        });
+
+        // --- FORM SUBMISSION ---
+        document.getElementById('providerForm').onsubmit = (e) => {
+            e.preventDefault();
+            const rawImg = document.getElementById('pImgUrl').value.trim();
+            const nameValue = document.getElementById('pName').value;
+            const finalImg = getDirectDriveUrl(rawImg) || `https://ui-avatars.com/api/?name=${encodeURIComponent(nameValue)}&background=0F98B3&color=fff`;
+
+            const providerData = {
+                id: editingProviderId || Date.now(),
+                name: nameValue.trim(),
+                email: document.getElementById('pEmail').value.trim(),
+                service: document.getElementById('pService').value,
+                loc: document.getElementById('pLoc').value.trim(),
+                phone: document.getElementById('pPhone').value.trim(),
+                idPrefix: document.getElementById('pIdPrefix').value,
+                idNumber: document.getElementById('pIdNumber').value.trim(),
+                bio: document.getElementById('pBio').value.trim(),
+                img: finalImg
+            };
+
+            if (editingProviderId) {
+                const idx = providers.findIndex(p => p.id === editingProviderId);
+                providers[idx] = providerData;
+                showToast("Provider updated successfully", "success");
+            } else {
+                providers.unshift(providerData);
+                showToast("New provider registered", "success");
+            }
+            syncUI();
+            showPage('edit');
+        };
+
+        // --- UI HELPERS ---
+        function syncUI() {
+            document.getElementById('stat-providers').innerText = providers.length;
+            renderDirectory();
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('page-'+id).classList.add('active');
+            const nav = document.getElementById('nav-'+id);
+            if(nav) nav.classList.add('active');
+        }
+
+        function renderDirectory() {
+            const container = document.getElementById('directory-container');
+            const searchTerm = document.getElementById('editSearch').value.toLowerCase();
+            const filtered = providers.filter(p => p.name.toLowerCase().includes(searchTerm) || p.service.toLowerCase().includes(searchTerm));
+
+            container.innerHTML = filtered.map(p => `
+                <div class="glass-card p-5 flex items-center justify-between border border-transparent hover:border-kihlot-primary/20 transition-all">
+                    <div class="flex items-center gap-4">
+                        <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover bg-slate-50" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=E2E8F0&color=475569'">
+                        <div>
+                            <h4 class="font-bold text-slate-800">${p.name}</h4>
+                            <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">${p.service.replace('_', ' ')} • ${p.loc}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editProvider(${p.id})" class="p-2 text-slate-400 hover:text-kihlot-primary transition-colors"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteProvider(${p.id})" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editProvider(id) {
+            const p = providers.find(item => item.id === id);
+            if (!p) return;
+            editingProviderId = id;
+            document.getElementById('pName').value = p.name;
+            document.getElementById('pEmail').value = p.email;
+            document.getElementById('pPhone').value = p.phone;
+            document.getElementById('pService').value = p.service;
+            document.getElementById('pImgUrl').value = p.img;
+            document.getElementById('pIdPrefix').value = p.idPrefix;
+            document.getElementById('pIdNumber').value = p.idNumber;
+            document.getElementById('pLoc').value = p.loc;
+            document.getElementById('pBio').value = p.bio;
+            imgInput.dispatchEvent(new Event('input'));
+            document.getElementById('form-title').innerText = "Update Provider";
+            showPage('add');
+            validateForm();
+        }
+
+        function prepareAddMode() {
+            editingProviderId = null;
+            document.getElementById('providerForm').reset();
+            imgInput.dispatchEvent(new Event('input'));
+            document.getElementById('form-title').innerText = "Add Service Provider";
+            showPage('add');
+        }
+
+        function deleteProvider(id) {
+            if(confirm("Are you sure you want to remove this provider?")) {
+                providers = providers.filter(p => p.id !== id);
+                syncUI();
+                showToast("Provider removed", "success");
+            }
+        }
+
+        function showToast(msg, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'success' ? 'bg-kihlot-primary' : 'bg-red-500'}`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function validateForm() {
+            const nameValid = document.getElementById('pName').value.trim().length >= 3;
+            const phoneValid = document.getElementById('pPhone').value.length >= 10;
+            document.getElementById('submitBtn').disabled = !(nameValid && phoneValid);
+        }
+
+        document.getElementById('providerForm').querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('input', validateForm);
+        });
+
+        document.getElementById('loginForm').onsubmit = (e) => {
+            e.preventDefault();
+            document.getElementById('login-gate').style.display = 'none';
+            document.getElementById('main-sidebar').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            syncUI();
+            renderUsers();
+            initChart();
+        };
+
+        function renderUsers() {
+            document.getElementById('users-table-body').innerHTML = users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.date}</td></tr>`).join('');
+            document.getElementById('stat-users').innerText = users.length;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('mainTrendChart').getContext('2d');
+            new Chart(ctx, { 
+                type: 'line', 
+                data: { labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ data: [12, 19, 11, 15, 22, 10], borderColor: '#0F98B3', backgroundColor: 'rgba(15, 152, 179, 0.1)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+            });
+        }
+
+        function filterDirectory() { renderDirectory(); }
+        function logout() { location.reload(); }
+    </script>
+</body>
+</html>
