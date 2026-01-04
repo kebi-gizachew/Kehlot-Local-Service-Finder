@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kehlot - Providers & Chat</title><style>
+/* --- 1. ORIGINAL CSS (UNTOUCHED) --- */
+:root { --kihlot-teal: #0F98B3;--kihlot-teal-light: #9edee4;--text-dark: #0f172a;
+--text-gray: #64748b;}body {background: #f8fafc;color: var(--text-dark);
+font-family: 'Inter', sans-serif;margin: 0;}.kehlot-header {background: white;
+border-bottom: 1px solid #eef2f6;padding: 12px 5%;display: flex;
+justify-content: space-between;align-items: center;
+position: sticky;top: 0;z-index: 100;}.header-left { display: flex; align-items: center; cursor: pointer; gap: 10px; }.brand-logo-img { height: 45px; width: auto;
+border-radius: 4px; }.brand-name { font-size: 1.4rem; font-weight: 800; color: var(--kihlot-teal); }.header-right { display: flex; gap: 20px; font-weight: 600; align-items: center;
+}.user-meta, .logout-link, .recent-link { display: flex; align-items: center; gap: 5px; cursor: pointer; }.content-wrapper { max-width: 800px; margin: 0 auto;
+padding: 30px 20px; }.view { display: none; }.view.active { display: block; }
+.category-header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.icon-sq-inline { background: #f1f5f9; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}.title-large { margin: 0; font-size: 1.5rem; font-weight: 800; }.search-box { background: white; border: 1px solid #d1d5db;
+border-radius: 14px; display: flex; align-items: center; padding: 12px 18px; margin-bottom: 25px; max-width: 500px;}.search-icon-svg { color: #64748b; margin-right: 12px; display: flex;
+align-items: center; }
+.search-box input { border: none; outline: none; font-size: 1rem; color: #475569; width: 100%; background: transparent; }.selection-grid { display: grid;
+grid-template-columns: 1fr; gap: 12px; }
+.option-card { background: white; border: 1.5px solid #eef2f6; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; cursor: pointer;
+transition: all 0.25s ease; }
+.option-card:hover { border-color: var(--kihlot-teal-light); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06); transform: translateY(-2px); }.option-card.selected { border-color: var(--kihlot-teal); background: #f0fbfc;
+}.icon-sq { background: #f1f5f9; width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-right: 20px;
+}
+.radio-indicator { margin-left: auto; width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%; }.option-card.selected .radio-indicator { border-color: var(--kihlot-teal);
+background: var(--kihlot-teal); box-shadow: inset 0 0 0 4px white; }.profile-card-full { background: white; border-radius: 24px; overflow: hidden;
+box-shadow: 0 10px 25px rgba(0,0,0,0.05); }.teal-banner-strip { background: var(--kihlot-teal); height: 130px; }.profile-main-area { padding: 0 30px 40px 30px; margin-top: -60px;
+text-align: center; }.floating-avatar { width: 110px; height: 110px; border-radius: 20px; border: 5px solid white; object-fit: cover; background: white;
+}.detail-name { font-size: 1.8rem; font-weight: 800; margin: 15px 0 5px 0; }.rating-row { display: flex; justify-content: center; align-items: center;
+gap: 8px; margin-bottom: 20px; }.stars-gold { color: #f6ad55; font-size: 1.2rem; }.stars-gray { color: #e2e8f0; font-size: 1.2rem; }.modal-overlay { position: fixed;
+top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}.interactive-stars { font-size: 2.8rem; cursor: pointer; color: #cbd5e1; margin-bottom: 20px; display: flex; justify-content: center; gap: 5px; }.btn-rate-open { background: var(--kihlot-teal);
+color: white; border: none; padding: 8px 25px; border-radius: 20px; font-weight: 700; cursor: pointer; margin-bottom: 25px; }
+.btn-modal-submit { background: var(--kihlot-teal); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px;
+}
+.contact-info-box { text-align: left; background: #f8fafc; border-radius: 16px; padding: 20px; margin-bottom: 25px; }.info-item { margin-bottom: 10px; font-size: 0.95rem; display: flex;
+gap: 10px; align-items: center; }.about-box-inline { border-top: 1px solid #e2e8f0; margin-top: 15px; padding-top: 15px; }.about-box-inline h3 { font-size: 1rem;
+font-weight: 800; margin-bottom: 8px; color: var(--text-dark); }.about-box-inline p { font-size: 0.9rem; color: var(--text-gray); line-height: 1.5; margin: 0; }
+.btn-message-large { background: var(--kihlot-teal); color: white; border: none; width: 100%; padding: 18px; border-radius: 16px; font-weight: 700; cursor: pointer; display: flex;
+align-items: center; justify-content: center; gap: 10px; }.nav-back { background: none; border: none; color: var(--text-gray); cursor: pointer; font-weight: 600; margin-bottom: 20px;
+}
+.telegram-chat { background: white; height: 75vh; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #eee;
+}.chat-header { background: var(--kihlot-teal); color: white; padding: 15px; display: flex; align-items: center; gap: 10px; }
+.chat-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; }
+.chat-body { flex: 1; background: #e7ebf0; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.msg-sent { background: #effdde; align-self: flex-end; padding: 10px 15px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; max-width: 75%; display: flex; flex-direction: column; align-items: flex-end; }
+.delete-icon-wrap { cursor: pointer; margin-top: 4px; display: flex; flex-direction: column; align-items: center; color: #64748b; font-size: 10px; }
+.chat-img-msg { max-width: 200px; border-radius: 8px; cursor: pointer; display: block; }
+.chat-footer { padding: 15px; display: flex; background: white; gap: 10px; border-top: 1px solid #eee; align-items: center; }
+.chat-footer input { flex: 1; border: 1px solid #ddd; padding: 12px; border-radius: 12px; outline: none; }
+.send-btn, .attachment-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; }
+.btn-yes-logout { background: #ff4d4d; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 10px;
+}
+.img-popup-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 2000; display:none; align-items:center; justify-content:center; }
+.img-popup-overlay img { max-width: 90%; max-height: 90%; border-radius: 10px; }
+/* Inline confirmation message (from index) */
+.confirmation-msg { max-width: 800px; margin: 12px auto 0 auto; padding: 12px 16px; background: #e6f7ec; color: #1f7a3a; border: 1px solid #b6e2c1; border-radius: 10px; font-weight: 600; display: none; }
+
+/* --- Categories grid styles (copied from canonical index) --- */
+.categories-container { background-color: #F7FDFE; min-height: calc(100vh - 70px); padding: 40px 20px; border-radius: 0; }
+.grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; max-width: 800px; margin-left: auto; margin-right: auto; }
+.grid-card { background: white; border-radius: 20px; padding: 22px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1.5px solid transparent; transition: all 0.25s ease; }
+.grid-card:hover { transform: translateY(-4px); border-color: var(--kihlot-teal); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06); }
+.grid-card .icon { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+.grid-card .label { font-weight: 800; display: block; font-size: 1rem; }
+.grid-card .view-p { color: var(--kihlot-teal); font-size: 0.75rem; font-weight: 700; margin-top: 6px; display: block; }
+@media (max-width: 600px) { .grid-layout { grid-template-columns: repeat(2, 1fr); } }
+
+.ui-feedback-banner { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 8px; color: white; font-weight: 600; z-index: 2000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.bg-success { background: #10b981; }
+.bg-error { background: #ef4444; }
+</style>
+</head>
+<body>
+<div id="feedbackBanner" class="ui-feedback-banner"></div>
+<div id="imgPopup" class="img-popup-overlay" onclick="this.style.display='none'"><img id="popupTarget" src=""></div>
+<div id="logoutModal" class="modal-overlay">
+<div class="modal-content">
+<h2>Logout</h2>
+<p style="color:var(--text-gray)">Are you sure you want to exit Kehlot?</p>
+<button class="btn-yes-logout" onclick="location.reload()">Yes, Exit</button>
+<button style="margin-top:15px; background:none; border:none; color:var(--text-gray); cursor:pointer;" onclick="toggleLogout(false)">Cancel</button>
+</div>
+</div>
+<div id="rateModal" class="modal-overlay">
+<div class="modal-content">
+<h2 style="margin-top:0">Rate Experience</h2>
+<p style="color: var(--text-gray);">How would you rate this provider?</p>
+<div class="interactive-stars" id="rating-stars">
+<span onclick="setRating(1)">☆</span><span onclick="setRating(2)">☆</span><span onclick="setRating(3)">☆</span><span onclick="setRating(4)">☆</span><span onclick="setRating(5)">☆</span>
+</div>
+<button id="submitRatingBtn" class="btn-modal-submit" onclick="submitRating()">Submit Review</button> <button style="margin-top:15px; background:none; border:none; color:var(--text-gray); cursor:pointer;" onclick="toggleModal(false)">Cancel</button>
+</div>
+</div>
+<nav class="kehlot-header">
+<div class="header-left" onclick="showView('listing')">
+<img src="pic/logo.jpg" alt="Kehlot Logo" class="brand-logo-img" onerror="this.style.display='none';">
+<span class="brand-name">Kehlot</span>
+</div>
+<div class="header-right">
+<span class="user-meta">
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+<span id="header-username">user</span>
+</span>
+<span class="recent-link" onclick="handleRecentChats()">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+</span>
+<span class="logout-link" onclick="toggleLogout(true)">
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+Logout
+</span>
+</div>
+</nav>
+<div id="confirmationMsg" class="confirmation-msg"></div>
+<main class="content-wrapper">
+<section id="view-categories-grid" class="view categories-container">
+<h1 class="main-heading" style="text-align: center;">Categories</h1>
+<p class="sub-heading" style="text-align: center;">Find the right help for your home</p>
+<div class="grid-layout">
+  <div class="grid-card" onclick="quickSelect('Plumbing', '🔧')"> <span class="icon">🔧</span><span class="label">Plumbing</span><span class="view-p">View Provider</span> </div>
+  <div class="grid-card" onclick="quickSelect('Electrical', '⚡')"> <span class="icon">⚡</span><span class="label">Electrical</span><span class="view-p">View Provider</span> </div>
+  <div class="grid-card" onclick="quickSelect('Cleaning', '🧹')"> <span class="icon">🧹</span><span class="label">Cleaning</span><span class="view-p">View Provider</span> </div>
+  <div class="grid-card" onclick="quickSelect('Carpentry', '🔲')"> <span class="icon">🔲</span><span class="label">Carpentry</span><span class="view-p">View Provider</span> </div>
+  <div class="grid-card" onclick="quickSelect('Painting', '🎨')"> <span class="icon">🎨</span><span class="label">Painting</span><span class="view-p">View Provider</span> </div>
+  <div class="grid-card" onclick="quickSelect('Mechanics', '⚙️')"> <span class="icon">⚙️</span><span class="label">Mechanics</span><span class="view-p">View Provider</span> </div>
+</div>
+</section>
+
+<section id="view-listing" class="view">
+<button class="nav-back" onclick="window.history.back()">← Back to Questions</button>
+<div class="category-header-row">
+<div class="icon-sq-inline" id="cat-icon-small">🔧</div>
+<div>
+<h1 class="title-large" id="cat-title">Plumbing Providers</h1>
+<p style="margin:2px 0 0 0; color:var(--text-gray); font-size:0.9rem" id="cat-count">0 providers available</p>
+</div>
+</div>
+<div class="search-box">
+<div class="search-icon-svg"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+<input type="text" placeholder="Search by location..." id="searchField" oninput="renderList()">
+</div>
+<div class="selection-grid" id="provider-list"></div>
+</section>
+<section id="view-details" class="view">
+<button class="nav-back" onclick="showView('listing')">← Back to List</button>
+<div class="profile-card-full">
+<div class="teal-banner-strip"></div>
+<div class="profile-main-area">
+<img id="p-img" src="" class="floating-avatar">
+<h2 class="detail-name" id="p-name">---</h2>
+<div class="rating-row">
+<span class="stars-gold" id="star-row-detail">★★★★☆</span>
+<span style="color:var(--text-gray); font-size:0.9rem" id="p-reviews">0 reviews</span>
+</div>
+<button class="btn-rate-open" onclick="toggleModal(true)">Rate Provider</button>
+<div class="contact-info-box">
+  
+  <div class="info-item"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span id="p-loc">---</span></div>
+  <div class="info-item"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span id="p-phone">---</span></div>
+  <div class="info-item"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span id="p-email">---</span></div>
+  <div class="about-box-inline"><h3>About</h3><p id="p-bio">---</p></div>
+</div>
+<button id="msgBtn" class="btn-message-large" onclick="openChat()">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+Send Message
+</button>
+</div>
+</div>
+</section>
+<section id="view-chat" class="view">
+<button class="nav-back" onclick="showView('details')">← Back to Profile</button>
+<div class="telegram-chat">
+<div class="chat-header">
+<img src="" class="chat-avatar" id="chat-p-img">
+<strong id="chat-p-name">---</strong>
+</div>
+<div class="chat-body" id="chat-messages"></div>
+<div class="chat-footer">
+<button class="attachment-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+</button>
+<input type="file" id="fileInput" hidden onchange="handleFileUpload(event)">
+<input type="text" id="msgInput" placeholder="Type a message..." onkeypress="handleChatEnter(event)">
+<button id="sendBtn" class="send-btn" onclick="sendMsg()">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+</button>
+</div>
+</div>
+</section>
+</main>
+<script>
+/* --- APP STATE --- */
+const AppState = {
+    currentUser: { id: "user_123", name: "user", role: "customer" },
+    selectedCategory: { name: "", icon: "" },
+    currentProvider: null,
+    chatHistory: [], // FIXED: Array of {providerId, senderId, content, type, timestamp}
+    userRating: 0,
+    isLoading: false // ADDED: Global async state guard
+};
+
+/* --- API SERVICE CONTRACTS (MOCK) --- */
+const API = {
+    async fetchProviders(filters) {
+        await new Promise(r => setTimeout(r, 400));
+        let data = providerDatabase;
+        if (filters.skill) data = data.filter(p => p.skill === filters.skill);
+        if (filters.search) {
+            const s = filters.search.toLowerCase();
+            // Only match by location
+            data = data.filter(p => p.loc.toLowerCase().includes(s));
+        }
+        return { success: true, data };
+    },
+
+    async submitReview(payload) {
+        // FIXED: Backend-ready payload validation
+        if (!payload.providerId || !payload.userId || !payload.stars) {
+            throw new Error("Missing required review identifiers.");
+        }
+        await new Promise(r => setTimeout(r, 600));
+        return { success: true, message: "Review submitted successfully!" };
+    },
+
+    async postMessage(payload) {
+        // FIXED: Backend-ready message validation
+        if (!payload.providerId || !payload.userId || !payload.content) {
+            throw new Error("Message context missing.");
+        }
+        await new Promise(r => setTimeout(r, 300));
+        return { 
+            success: true, 
+            data: { ...payload, id: Date.now(), timestamp: new Date().toISOString() } 
+        };
+    }
+};
+
+/* --- MOCK DATABASE --- */
+const providerDatabase = [
+{ id: 1, name: "Dawit Mengistu", skill: "Plumbing", loc: "Bole", phone: "+251 911 370 518", email: "dawit@gmail.com", img: "pic/Dawit.jpg", bio: "Specialist in modern building piping.", reviews: 42, stars: 4 },
+{ id: 2, name: "Selamawit Tadesse", skill: "Plumbing", loc: "Mexico", phone: "+251 912 975 048", email: "selam@gmail.com", img: "pic/Selamawit.jpg", bio: "Detailed bathroom maintenance.", reviews: 15, stars: 3 },
+{ id: 3, name: "Yonas Gebre", skill: "Plumbing", loc: "Piassa", phone: "+251 912 375 548", email: "yonas@gmail.com", img: "pic/Yonas.jpg", bio: "20 years of experience.", reviews: 88, stars: 5 },
+{ id: 4, name: "Mulugeta Bekele", skill: "Plumbing", loc: "Gerji", phone: "+251 921 275 358", email: "mulu@gmail.com", img: "pic/Mulugeta.jpg", bio: "Fast emergency response.", reviews: 30, stars: 4 },
+{ id: 5, name: "Elias Haile", skill: "Electrical", loc: "Abado", phone: "+251 911 789 508", email: "elias@gmail.com", img: "pic/Elias.jpg", bio: "Smart home wiring expert.", reviews: 120, stars: 5 },
+{ id: 6, name: "Helen Tesfaye", skill: "Electrical", loc: "Sarbet", phone: "+251 902 456 547", email: "helen@gmail.com", img: "pic/Helen.jpg", bio: "Lighting design specialist.", reviews: 45, stars: 4 },
+{ id: 7, name: "Kidus Yoseph", skill: "Electrical", loc: "Summit", phone: "+251 924 123 548", email: "kidus@gmail.com", img: "pic/Kidus.jpg", bio: "Industrial circuit breaker.", reviews: 10, stars: 3 },
+{ id: 8, name: "Saba Gidey", skill: "Electrical", loc: "Kazanchis", phone: "+251 932 375 548", email: "saba@gmail.com", img: "pic/Saba.jpg", bio: "Appliance repair specialist.", reviews: 67, stars: 4 },
+{ id: 9, name: "Martha Alemu", skill: "Cleaning", loc: "Kara", phone: "+251 992 775 440", email: "martha@gmail.com", img: "pic/Martha.jpg", bio: "Expert deep cleaning.", reviews: 156, stars: 4 },
+{ id: 10, name: "Solomon Zewde", skill: "Cleaning", loc: "Ayat", phone: "+251 902 075 544", email: "sol@gmail.com", img: "pic/Solomon.jpg", bio: "Office janitorial services.", reviews: 90, stars: 5 },
+{ id: 11, name: "Rahel Belay", skill: "Cleaning", loc: "Old Airport", phone: "+251 926 395 543", email: "rahel@gmail.com", img: "pic/Rahel.jpg", bio: "Post-event cleaning specialist.", reviews: 12, stars: 3 },
+{ id: 12, name: "Genet Kebede", skill: "Cleaning", loc: "Lebu", phone: "+251 962 575 548", email: "genet@gmail.com", img: "pic/Genet.jpg", bio: "Eco-friendly cleaning.", reviews: 34, stars: 4 },
+{ id: 13, name: "Tilahun G.", skill: "Carpentry", loc: "Merkato", phone: "+251 915 375 544", email: "ti@gmail.com", img: "pic/Tilahun.jpg", bio: "Master of custom furniture.", reviews: 200, stars: 5 },
+{ id: 14, name: "Biniyam J.", skill: "Carpentry", loc: "Kotebe", phone: "+251 916 775 545", email: "bini@gmail.com", img: "pic/Biniam.jpg", bio: "Cabinet repair expert.", reviews: 50, stars: 4 },
+{ id: 15, name: "Eden Solomon", skill: "Carpentry", loc: "Wessen", phone: "+251 962 775 678", email: "eden@gmail.com", img: "pic/Eden.png", bio: "Office workspace design.", reviews: 75, stars: 4 },
+{ id: 16, name: "Fasil Abera", skill: "Carpentry", loc: "Summit", phone: "+251 955 365 547", email: "fasil@gmail.com", img: "pic/Fasil.jpg", bio: "Roofing and exterior wood.", reviews: 88, stars: 5 },
+{ id: 17, name: "Meron Isaac", skill: "Painting", loc: "Kality", phone: "+251 932 395 542", email: "meron@gmail.com", img: "pic/Meron.jpg", bio: "Creative wall textures.", reviews: 67, stars: 4 },
+{ id: 18, name: "Abel Tesema", skill: "Painting", loc: "Addisu Gebeya", phone: "+251 943 395 548", email: "abel@gmail.com", img: "pic/Abel.png", bio: "Fast apartment repainting.", reviews: 14, stars: 3 },
+{ id: 19, name: "Tsion Hailu", skill: "Painting", loc: "Megenagna", phone: "+251 932 335 241", email: "tsion@gmail.com", img: "pic/Tsion.png", bio: "Exterior coating specialist.", reviews: 102, stars: 5 },
+{ id: 20, name: "Daniel K.", skill: "Painting", loc: "Jemo", phone: "+251 912 345 679", email: "dan@gmail.com", img: "pic/Daniel.png", bio: "Detailed trim painting.", reviews: 25, stars: 4 },
+{ id: 21, name: "Zelalem W.", skill: "Mechanics", loc: "5 Kilo", phone: "+251 922 375 540", email: "zel@gmail.com", img: "pic/zelalem.png", bio: "Master engine technician.", reviews: 500, stars: 5 },
+{ id: 22, name: "Bethlehem T.", skill: "Mechanics", loc: "Shiromeda", phone: "+251 917 305 558", email: "betty@gmail.com", img: "pic/Bethlehem.jpg", bio: "Brake and gear expert.", reviews: 20, stars: 4 },
+{ id: 23, name: "Anteneh M.", skill: "Mechanics", loc: "22(ayahulet)", phone: "+251 912 375 548", email: "ant@gmail.com", img: "pic/Anteneh.jpg", bio: "General car maintenance.", reviews: 80, stars: 5 },
+{ id: 24, name: "Lulit Abebe", skill: "Mechanics", loc: "CMC", phone: "+251 912 975 048", email: "lulit@gmail.com", img: "pic/Lulit.jpg", bio: "Electrical car diagnostics.", reviews: 9, stars: 3 }
+];
+
+/* --- CORE UI LOGIC --- */
+function notify(msg, type='success') {
+    const b = document.getElementById('feedbackBanner');
+    b.innerText = msg;
+    b.className = `ui-feedback-banner bg-${type}`;
+    b.style.display = 'block';
+    setTimeout(() => b.style.display = 'none', 3000);
+}
+
+function showConfirmation(message) {
+    const box = document.getElementById('confirmationMsg');
+    if(!box) return;
+    box.textContent = message;
+    box.style.display = 'block';
+    setTimeout(() => { box.style.display = 'none'; }, 3000);
+}
+
+function showView(id) {
+    // FIXED: Cleanup logic when switching views to prevent state leakage
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById(`view-${id}`);
+    if(target) target.classList.add('active');
+    
+    // Auto-refresh listing if returning
+    if (id === 'listing') renderList();
+}
+
+window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    AppState.selectedCategory.name = urlParams.get('cat') || "";
+    AppState.selectedCategory.icon = decodeURIComponent(urlParams.get('ico') || "📋");
+    document.getElementById('header-username').innerText = AppState.currentUser.name;
+    if (!AppState.selectedCategory.name) {
+        // Show the categories grid by default when no category is selected
+        showView('categories-grid');
+    } else {
+        renderList();
+    }
+};
+
+/* --- LISTING & SEARCH --- */
+async function renderList() {
+    if (AppState.isLoading) return; // FIXED: Prevent race conditions
+    AppState.isLoading = true;
+
+    const searchVal = document.getElementById('searchField').value;
+    try {
+        const res = await API.fetchProviders({ skill: AppState.selectedCategory.name, search: searchVal });
+        const list = document.getElementById('provider-list');
+        list.innerHTML = '';
+        
+        document.getElementById('cat-title').innerText = (AppState.selectedCategory.name || "All") + " Providers";
+        document.getElementById('cat-icon-small').innerText = AppState.selectedCategory.icon;
+        document.getElementById('cat-count').innerText = res.data.length + " providers available";
+
+        res.data.forEach(p => {
+            const el = document.createElement('div');
+            el.className = 'option-card';
+            el.onclick = () => { 
+                AppState.currentProvider = p; // FIXED: Consistent state assignment
+                populateDetails(p); 
+                showView('details'); 
+            };
+            const imgSrc = (p.img && (p.img.startsWith('http') || p.img.includes('/'))) ? p.img : 'pic/' + p.img;
+            const goldStars = "★".repeat(Math.round(p.stars));
+            const grayStars = "★".repeat(5 - Math.round(p.stars));
+            el.dataset.providerId = p.id;
+            el.innerHTML = `
+              <img src="${imgSrc}" style="width:50px; height:50px; border-radius:10px; margin-right:15px; object-fit:cover;">
+              <div class="option-info">
+                <p class="text-bold" style="margin:0">${p.name}</p>
+                <p class="text-muted loc-data" style="margin:3px 0 0 0; display:flex; align-items:center; gap:6px;">${p.loc}</p>
+              </div>
+              <div style="margin-left:auto; text-align: right;"> 
+                <div style="font-size: 0.9rem;"><span style="color:#f6ad55;">${goldStars}</span><span style="color:#e2e8f0;">${grayStars}</span></div>
+                <span style="font-size: 0.8rem; color: #64748b;">(${p.reviews})</span>
+              </div>`;
+            list.appendChild(el);
+        });
+        // show friendly in-page message when no providers match search
+        const existingError = document.getElementById('no-loc-error');
+        if (res.data.length === 0) {
+            if (!existingError) {
+                const err = document.createElement('p');
+                err.id = 'no-loc-error';
+                err.style.cssText = "grid-column:1/-1; text-align:center; color: #64748b; padding:20px;";
+                err.innerText = "No provider found in this location.";
+                list.appendChild(err);
+            }
+        } else {
+            if (existingError) existingError.remove();
+        }
+    } catch(e) { 
+        notify("Could not load providers. Please try again.", "error"); // FIXED: Backend ready error feedback
+    } finally {
+        AppState.isLoading = false;
+    }
+}
+
+// Fallback open by id and delegation - ensures provider click opens details reliably
+function openProviderDetailsById(id) {
+    const prov = providerDatabase.find(p => p.id === parseInt(id, 10));
+    if (!prov) return notify("Provider not found.", "error");
+    AppState.currentProvider = prov;
+    populateDetails(prov);
+    showView('details');
+}
+
+document.addEventListener('click', function (e) {
+    const card = e.target.closest && e.target.closest('.option-card');
+    if (!card) return;
+    const pid = card.dataset && card.dataset.providerId;
+    if (pid) openProviderDetailsById(pid);
+});
+function populateDetails(p){ 
+    if(!p) return;
+    document.getElementById('p-img').src = p.img; 
+    document.getElementById('p-name').innerText = p.name; 
+    document.getElementById('p-skill').innerHTML = `${getIconForSkill(p.skill)} ${p.skill}`; 
+    document.getElementById('p-loc').innerText = p.loc; 
+    document.getElementById('p-phone').innerText = p.phone; 
+    document.getElementById('p-email').innerText = p.email; 
+    document.getElementById('p-bio').innerText = p.bio; 
+    document.getElementById('star-row-detail').innerText = '★'.repeat(p.stars) + '☆'.repeat(5-p.stars); 
+    document.getElementById('p-reviews').innerText = p.reviews + ' reviews'; 
+}
+
+/* --- RATING SYSTEM --- */
+function toggleModal(show) { 
+    // FIXED: Protection against invalid provider state
+    if(show && !AppState.currentProvider) return notify("Please select a provider first", "error");
+    document.getElementById('rateModal').style.display = show ? 'flex' : 'none'; 
+    if(show) setRating(0); 
+}
+
+function setRating(s){ 
+    AppState.userRating = s; 
+    Array.from(document.getElementById('rating-stars').children).forEach((el,i)=> el.style.color = i < s ? '#f6ad55' : '#cbd5e1'); 
+}
+
+async function submitRating(){
+    if (AppState.isLoading || !AppState.currentProvider) return;
+    if (AppState.userRating === 0) return notify("Please select a star rating", "error"); // FIXED: Validation
+
+    AppState.isLoading = true;
+    const btn = document.getElementById('submitRatingBtn');
+    btn.innerText = "Processing...";
+
+    try {
+        const payload = {
+            providerId: AppState.currentProvider.id,
+            userId: AppState.currentUser.id,
+            stars: AppState.userRating,
+            timestamp: new Date().toISOString() // ADDED: Timestamp for backend
+        };
+        const res = await API.submitReview(payload);
+        if(res.success) {
+            // Compute accurate aggregated rating and update counts
+            const oldAvg = AppState.currentProvider.stars || 0;
+            const oldCount = AppState.currentProvider.reviews || 0;
+            const newTotal = oldCount + 1;
+            const preciseAvg = ((oldAvg * oldCount) + AppState.userRating) / newTotal;
+            const roundedAvg = Math.round(preciseAvg);
+
+            AppState.currentProvider.reviews = newTotal;
+            AppState.currentProvider.stars = roundedAvg;
+
+            const idx = providerDatabase.findIndex(p => p.id === AppState.currentProvider.id);
+            if (idx !== -1) {
+                providerDatabase[idx].reviews = newTotal;
+                providerDatabase[idx].stars = roundedAvg;
+            }
+
+            populateDetails(AppState.currentProvider);
+            showConfirmation("Successfully submitted. Thank you for rating.");
+            renderList();
+            toggleModal(false);
+        }
+    } catch(e) { 
+        notify("Rating submission failed. Try again.", "error"); // FIXED: Error handling
+    } finally {
+        AppState.isLoading = false;
+        btn.innerText = "Submit Review";
+    }
+}
+
+/* --- CHAT SYSTEM --- */
+function openChat() {
+    // FIXED: Strict provider validation
+    if(!AppState.currentProvider) return notify("No provider context. Please go back.", "error");
+    
+    document.getElementById('chat-p-img').src = AppState.currentProvider.img;
+    document.getElementById('chat-p-name').innerText = AppState.currentProvider.name;
+    
+    renderChat(); // FIXED: Render history scoped to this provider
+    showView('chat');
+}
+
+async function sendMsg() {
+    const input = document.getElementById('msgInput');
+    const content = input.value.trim();
+    
+    // FIXED: Prevent empty messages or sending during loading
+    if (!content || AppState.isLoading || !AppState.currentProvider) {
+        if(!content) notify("Message cannot be empty", "error");
+        return;
+    }
+
+    AppState.isLoading = true;
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+
+    try {
+        const payload = {
+            providerId: AppState.currentProvider.id,
+            userId: AppState.currentUser.id,
+            senderType: "user",
+            content: content,
+            type: "text"
+        };
+        const res = await API.postMessage(payload);
+        if(res.success) {
+            AppState.chatHistory.push(res.data);
+            try { localStorage.setItem('lastProviderId', res.data.providerId); } catch(e) {}
+            input.value = "";
+            renderChat();
+        }
+    } catch(e) { 
+        notify("Message failed to send.", "error"); 
+    } finally {
+        AppState.isLoading = false;
+        btn.disabled = false;
+    }
+}
+
+function renderChat() {
+    const box = document.getElementById('chat-messages');
+    box.innerHTML = '';
+    
+    if(!AppState.currentProvider) return;
+
+    // FIXED: Filter chat history per current provider to prevent message mixing
+    const currentConvo = AppState.chatHistory.filter(m => m.providerId === AppState.currentProvider.id);
+
+    currentConvo.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = "msg-sent";
+        let contentHtml = msg.type === 'image' 
+            ? `<img src="${msg.content}" class="chat-img-msg" onclick="openImgPopup('${msg.content}')">`
+            : `<div>${msg.content}</div>`;
+        div.innerHTML = `${contentHtml} <div class="delete-icon-wrap" onclick="handleDeleteMessage(${msg.id})"><span>Delete</span></div>`;
+        box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+}
+
+function handleDeleteMessage(id) {
+    // FIXED: Remove from state and re-render
+    AppState.chatHistory = AppState.chatHistory.filter(m => m.id !== id);
+    renderChat();
+    notify("Message removed locally");
+}
+
+async function handleFileUpload(event) {
+    // FIXED: Strict context validation before upload
+    if(!AppState.currentProvider) return notify("Provider session expired", "error");
+    
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Visual feedback for start of upload
+    notify("Uploading image...", "success");
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const payload = {
+                providerId: AppState.currentProvider.id,
+                userId: AppState.currentUser.id,
+                content: e.target.result,
+                type: 'image',
+                timestamp: new Date().toISOString()
+            };
+            const res = await API.postMessage(payload);
+            AppState.chatHistory.push(res.data);
+            try { localStorage.setItem('lastProviderId', res.data.providerId); } catch(e) {}
+            renderChat();
+        } catch(err) { 
+            notify("Image upload failed.", "error"); 
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleChatEnter(e) { if(e.key === 'Enter') sendMsg(); }
+function openImgPopup(src) { document.getElementById('popupTarget').src = src; document.getElementById('imgPopup').style.display = 'flex';}
+function toggleLogout(show) { document.getElementById('logoutModal').style.display = show ? 'flex' : 'none'; }
+function handleRecentChats() { const last = localStorage.getItem('lastProviderId'); if (last) { window.location.href = `providers.html?open=chat&provider=${last}`; } else { window.location.href = 'providers.html?open=recent'; } }
+
+// Quick select a category and navigate to the providers listing (preserves logic openness)
+function quickSelect(cat, icon) {
+    const params = new URLSearchParams();
+    params.set('cat', cat);
+    params.set('ico', encodeURIComponent(icon));
+    window.location.href = 'providers.html?' + params.toString();
+}
+</script>
+</body></html>
