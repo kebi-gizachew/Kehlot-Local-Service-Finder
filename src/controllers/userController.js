@@ -1,6 +1,5 @@
 import { prisma } from "../config/db.js";
 
-/* Providers by category */
 const getProvidersByCategory = async (req, res) => {
   const { serviceType } = req.params;
   const { location } = req.query;
@@ -41,14 +40,14 @@ const getProvidersByCategory = async (req, res) => {
     bio: p.bio,
     phone: p.phone,
     profileImage: p.profileImage,
-    averageRating: p.ratings && p.ratings.length ? p.ratings.reduce((s, r) => s + r.rating, 0) / p.ratings.length : null,
+    averageRating: p.ratings && p.ratings.length ? Number((p.ratings.reduce((s, r) => s + r.rating, 0) / p.ratings.length).toFixed(1)) : null,
+    ratingsCount: p.ratings ? new Set(p.ratings.map((r) => r.userId)).size : 0,
     createdAt: p.createdAt,
   }));
 
   res.json({ success: true, count: providers.length, data: providers });
 };
 
-/* Search providers by location */
 const searchProviders = async (req, res) => {
   const { location } = req.query;
 
@@ -65,7 +64,6 @@ const searchProviders = async (req, res) => {
   res.json(providers);
 };
 
-/* Provider profile */
 const getProviderProfile = async (req, res) => {
   const { id } = req.params;
 

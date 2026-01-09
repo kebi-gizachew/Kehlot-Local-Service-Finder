@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../config/db.js";
 
 const authenticate = (req, res, next) => {
-  // Prefer generic jwt if provided, otherwise look for role-specific jwt_* cookies
   const cookies = req.cookies || {};
   let token = cookies.jwt;
 
@@ -29,7 +28,6 @@ const authenticate = (req, res, next) => {
 };
 
 const protect = async (req, res, next) => {
-  // Prefer cookie token, fallback to Authorization header
   let token = req.cookies?.jwt;
 
   if (!token) {

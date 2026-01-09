@@ -12,9 +12,16 @@ export const rateProvider = async (req, res) => {
     if (!Number.isInteger(parsedRating) || parsedRating < 1 || parsedRating > 5) {
       return res.status(400).json({ success: false, message: "rating must be an integer between 1 and 5" });
     }
+    const idNum = Number(providerId);
+    if (!Number.isInteger(idNum) || idNum <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid provider id" });
+    }
 
-    // Ensure provider exists (ServiceProvider.id)
-    const provider = await prisma.serviceProvider.findUnique({ where: { id: Number(providerId) } });
+    let provider = await prisma.serviceProvider.findUnique({ where: { id: idNum } });
+    if (!provider) {
+      provider = await prisma.serviceProvider.findUnique({ where: { userId: idNum } });
+    }
+
     if (!provider) {
       return res.status(404).json({ success: false, message: "Provider not found" });
     }
@@ -22,7 +29,7 @@ export const rateProvider = async (req, res) => {
     const created = await prisma.rating.create({
       data: {
         userId: req.user.id,
-        providerId: Number(providerId),
+        providerId: provider.id,
         rating: parsedRating,
       },
       select: {
@@ -33,8 +40,37 @@ export const rateProvider = async (req, res) => {
         createdAt: true,
       },
     });
+    const rows = await prisma.$queryRaw`
+      SELECT COUNT(DISTINCT("userId"))::int as cnt
+      FROM "Rating"
+      WHERE "providerId" = ${provider.id}
+    `;
+    const ratingsCount = (rows && rows[0] && Number(rows[0].cnt)) || 0;
 
-    return res.status(201).json({ success: true, data: created });
+    const avgRows = await prisma.$queryRaw`
+      SELECT AVG(sub.rating)::float as avg
+      FROM (
+        SELECT DISTINCT ON ("userId") rating
+        FROM "Rating"
+        WHERE "providerId" = ${provider.id}
+        ORDER BY "userId", "createdAt" DESC
+      ) sub
+    `;
+    const averageRating =
+      avgRows && avgRows[0] && typeof avgRows[0].avg !== "undefined" && avgRows[0].avg !== null
+        ? Number(Number(avgRows[0].avg).toFixed(1))
+        : null;
+
+    try {
+      await prisma.serviceProvider.update({
+        where: { id: provider.id },
+        data: { averageRating: averageRating, ratingsCount: ratingsCount },
+      });
+    } catch (updateErr) {
+      console.error("Failed to update provider rating metrics:", updateErr);
+    }
+
+    return res.status(201).json({ success: true, data: created, ratingsCount, averageRating });
   } catch (err) {
     console.error("rateProvider error:", err);
 

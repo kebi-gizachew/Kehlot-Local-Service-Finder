@@ -3,10 +3,13 @@ import { getIO } from "../utils/socket.js";
 
 export const sendMessage = async (req, res) => {
   try {
-    const sender = req.user; // set by protect middleware
-    const { receiverId, content, imageUrl } = req.body;
+    const sender = req.user; 
+    const { receiverId, content, imageUrl } = req.body || {};
 
-    if (!receiverId) {
+    console.debug('sendMessage: content-type=', req.headers['content-type']);
+    console.debug('sendMessage: senderId=', sender?.id, 'receiverId=', receiverId, 'contentLength=', content ? content.length : 0, 'hasImageUrl=', !!imageUrl);
+
+    if (typeof receiverId === 'undefined' || receiverId === null) {
       return res.status(400).json({ success: false, message: "receiverId is required" });
     }
 
@@ -19,8 +22,22 @@ export const sendMessage = async (req, res) => {
       return res.status(401).json({ success: false, message: "Authentication required" });
     }
 
-    // Fetch receiver user and verify role
-    const receiver = await prisma.user.findUnique({ where: { id: Number(receiverId) }, select: { id: true, role: true } });
+    // Resolve receiverId: frontend may send either a User.id or a ServiceProvider.id
+    let recIdNum = Number(receiverId);
+    if (!Number.isInteger(recIdNum) || recIdNum <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid receiverId' });
+    }
+
+    // Try as user id first
+    let receiver = await prisma.user.findUnique({ where: { id: recIdNum }, select: { id: true, role: true } });
+    if (!receiver) {
+      const sp = await prisma.serviceProvider.findUnique({ where: { id: recIdNum }, select: { userId: true } });
+      if (sp && sp.userId) {
+        recIdNum = sp.userId;
+        receiver = await prisma.user.findUnique({ where: { id: recIdNum }, select: { id: true, role: true } });
+      }
+    }
+
     if (!receiver) return res.status(404).json({ success: false, message: "Receiver not found" });
 
     // Enforce: USER -> PROVIDER, PROVIDER -> USER
@@ -30,16 +47,13 @@ export const sendMessage = async (req, res) => {
     if (sender.role === "PROVIDER" && receiver.role !== "USER") {
       return res.status(400).json({ success: false, message: "Providers can only send messages to users" });
     }
-
-    // Optionally prevent other roles from messaging
     if (sender.role !== "USER" && sender.role !== "PROVIDER") {
       return res.status(403).json({ success: false, message: "Only users and providers may send messages" });
     }
-
     const message = await prisma.message.create({
       data: {
-        senderId: sender.id,
-        receiverId: Number(receiverId),
+        senderId: Number(sender.id),
+        receiverId: recIdNum,
         content,
         imageUrl,
       },
@@ -50,12 +64,9 @@ export const sendMessage = async (req, res) => {
       const io = getIO();
       io.to(`user:${receiver.id}`).emit("message:new", message);
       io.to(`user:${sender.id}`).emit("message:new", message);
-
-      // Notify to update conversations / lists
       io.to(`user:${receiver.id}`).emit("conversations:update", { userId: sender.id, lastMessage: message });
       io.to(`user:${sender.id}`).emit("conversations:update", { userId: receiver.id, lastMessage: message });
     } catch (err) {
-      // Non-fatal: if sockets are not initialized, still succeed the request
       console.warn("Socket emit skipped (not initialized)", err.message);
     }
 
@@ -68,11 +79,19 @@ export const sendMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
-    const otherId = Number(req.params.providerId || req.params.otherId);
+    // otherId may be a user id or a serviceProvider id from frontend query params
+    let otherId = Number(req.params.providerId || req.params.otherId);
     if (!otherId) return res.status(400).json({ success: false, message: "otherId is required" });
 
-    // Ensure other user exists
-    const other = await prisma.user.findUnique({ where: { id: otherId }, select: { id: true, role: true } });
+    let other = await prisma.user.findUnique({ where: { id: otherId }, select: { id: true, role: true } });
+    if (!other) {
+      const sp = await prisma.serviceProvider.findUnique({ where: { id: otherId }, select: { userId: true } });
+      if (sp && sp.userId) {
+        otherId = sp.userId;
+        other = await prisma.user.findUnique({ where: { id: otherId }, select: { id: true, role: true } });
+      }
+    }
+
     if (!other) return res.status(404).json({ success: false, message: "User not found" });
 
     // Optional: enforce that communication is between USER and PROVIDER
@@ -100,6 +119,65 @@ export const getMessages = async (req, res) => {
   }
 };
 
+export const getMessageById = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ success: false, message: "message id is required" });
+
+    const message = await prisma.message.findUnique({ where: { id } });
+    if (!message) return res.status(404).json({ success: false, message: "Message not found" });
+    if (message.senderId !== req.user.id && message.receiverId !== req.user.id) {
+      return res.status(403).json({ success: false, message: "Not authorized to view this message" });
+    }
+
+    return res.json({ success: true, data: { id: message.id, content: message.content, imageUrl: message.imageUrl, createdAt: message.createdAt, senderId: message.senderId, receiverId: message.receiverId } });
+  } catch (err) {
+    console.error("getMessageById error:", err);
+    res.status(500).json({ success: false, message: "Server error while fetching message" });
+  }
+};
+
+export const copyMessage = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ success: false, message: "message id is required" });
+
+    const original = await prisma.message.findUnique({ where: { id } });
+    if (!original) return res.status(404).json({ success: false, message: "Message not found" });
+    if (original.senderId !== req.user.id && original.receiverId !== req.user.id) {
+      return res.status(403).json({ success: false, message: "Not authorized to copy this message" });
+    }
+
+    const counterpart = original.senderId === req.user.id ? original.receiverId : original.senderId;
+
+    const copied = await prisma.message.create({
+      data: {
+        senderId: req.user.id,
+        receiverId: counterpart,
+        content: original.content,
+        imageUrl: original.imageUrl,
+      },
+    });
+
+    // Emit events similar to sendMessage
+    try {
+      const io = getIO();
+      io.to(`user:${counterpart}`).emit("message:new", copied);
+      io.to(`user:${req.user.id}`).emit("message:new", copied);
+
+      io.to(`user:${counterpart}`).emit("conversations:update", { userId: req.user.id, lastMessage: copied });
+      io.to(`user:${req.user.id}`).emit("conversations:update", { userId: counterpart, lastMessage: copied });
+    } catch (err) {
+      console.warn("Socket emit skipped (not initialized)", err.message);
+    }
+
+    return res.status(201).json({ success: true, data: copied });
+  } catch (err) {
+    console.error("copyMessage error:", err);
+    res.status(500).json({ success: false, message: "Server error while copying message" });
+  }
+};
+
 export const getConversations = async (req, res) => {
   try {
     const uid = req.user.id;
@@ -110,7 +188,6 @@ export const getConversations = async (req, res) => {
       select: { id: true, content: true, imageUrl: true, createdAt: true, senderId: true, receiverId: true }
     });
 
-    // reduce to unique counterpart -> latest message
     const map = new Map();
     for (const m of messages) {
       const counterpart = m.senderId === uid ? m.receiverId : m.senderId;
@@ -129,7 +206,6 @@ export const getConversations = async (req, res) => {
       lastMessage: map.get(id),
     }));
 
-    // sort by last message time desc
     conversations.sort((a, b) => new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt));
 
     res.json({ success: true, count: conversations.length, data: conversations });
@@ -153,14 +229,10 @@ export const deleteMessage = async (req, res) => {
     }
 
     await prisma.message.delete({ where: { id: messageId } });
-
-    // emit deletion event
     try {
       const io = getIO();
       io.to(`user:${message.senderId}`).emit("message:deleted", { id: messageId });
       io.to(`user:${message.receiverId}`).emit("message:deleted", { id: messageId });
-
-      // ask clients to refresh conversations for both users
       io.to(`user:${message.senderId}`).emit("conversations:update", { userId: message.receiverId });
       io.to(`user:${message.receiverId}`).emit("conversations:update", { userId: message.senderId });
     } catch (err) {

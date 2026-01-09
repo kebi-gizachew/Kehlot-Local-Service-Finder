@@ -1,9 +1,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../config/db.js";
 
-/**
- * ADMIN REGISTERS SERVICE PROVIDER
- */
+
 const registerProvider = async (req, res) => {
   try {
     const {
@@ -14,8 +12,8 @@ const registerProvider = async (req, res) => {
       serviceType,
       bio,
       profileImage,
-      faydaId,     // FIN identifier
-      fanNumber,   // FAN identifier
+      faydaId,     
+      fanNumber,   
       verificationDoc,
     } = req.body;
 
@@ -24,7 +22,6 @@ const registerProvider = async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Validate identification: allow either FIN (faydaId) or FAN (fanNumber), not both
     if (!faydaId && !fanNumber) {
       return res.status(400).json({ message: "Either faydaId (FIN) or fanNumber (FAN) is required" });
     }
@@ -32,7 +29,6 @@ const registerProvider = async (req, res) => {
       return res.status(400).json({ message: "Provide either faydaId (FIN) or fanNumber (FAN), not both" });
     }
 
-    // Normalize service type input to match enum labels
     const normalizeServiceType = (input) => {
       if (!input) return null;
       const s = String(input).toLowerCase();
@@ -72,7 +68,6 @@ const registerProvider = async (req, res) => {
         serviceType: normalizedServiceType,
         bio,
         profileImage,
-        // store either FIN (faydaId) or FAN (fanNumber) into the existing `faydaId` column
         faydaId: faydaId || fanNumber,
         verificationDoc,
       },
@@ -92,8 +87,6 @@ const dashboardStats = async (req, res) => {
   try {
     const users = await prisma.user.count({ where: { role: "USER" } });
     const providers = await prisma.user.count({ where: { role: "PROVIDER" } });
-
-    // Calculate overall average rating across all provider ratings (rounded to 1 decimal)
     const avgObj = await prisma.rating.aggregate({ _avg: { rating: true } });
     const averageRating = avgObj && avgObj._avg && avgObj._avg.rating != null ? Number(avgObj._avg.rating.toFixed(1)) : null;
 
@@ -106,15 +99,12 @@ const dashboardStats = async (req, res) => {
 
 const getUserGrowth = async (req, res) => {
   try {
-    // Accept ?months=N (1-24) - default 6 months
     const months = Math.min(Math.max(Number(req.query.months) || 6, 1), 24);
 
-    // Calculate start month (first day of earliest month we want)
     const now = new Date();
     const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
     start.setUTCMonth(start.getUTCMonth() - (months - 1));
 
-    // Query aggregated counts grouped by month
     const rows = await prisma.$queryRaw`
       SELECT
         DATE_TRUNC('month', "createdAt") AS mth,
@@ -155,6 +145,7 @@ const listProviders = async (req, res) => {
   const providersRaw = await prisma.serviceProvider.findMany({
     include: {
       user: { select: { id: true, fullName: true, email: true } },
+      ratings: { select: { rating: true, userId: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -167,6 +158,7 @@ const listProviders = async (req, res) => {
     location: p.location,
     bio: p.bio,
     profileImage: p.profileImage,
+    ratingsCount: p.ratings ? new Set(p.ratings.map((r) => r.userId)).size : 0,
     createdAt: p.createdAt,
   }));
 
@@ -175,6 +167,9 @@ const listProviders = async (req, res) => {
 
 const getProvider = async (req, res) => {
   const idNum = Number(req.params.id);
+  if (!Number.isInteger(idNum) || idNum <= 0) {
+    return res.status(400).json({ message: 'Invalid provider id' });
+  }
 
   // Try to fetch by serviceProvider.id first, then by userId
   let provider = await prisma.serviceProvider.findUnique({ where: { id: idNum }, include: { user: true, ratings: true } });
@@ -186,12 +181,12 @@ const getProvider = async (req, res) => {
     return res.status(404).json({ message: 'Provider not found' });
   }
 
-  // Compute provider average rating rounded to 1 decimal place when available
   let avg = null;
   if (provider.ratings && provider.ratings.length) {
     const raw = provider.ratings.reduce((s, r) => s + r.rating, 0) / provider.ratings.length;
     avg = Number(raw.toFixed(1));
   }
+  const ratingsCount = provider.ratings ? new Set(provider.ratings.map((r) => r.userId)).size : 0;
 
   return res.json({
     id: provider.id,
@@ -206,6 +201,7 @@ const getProvider = async (req, res) => {
     faydaId: provider.faydaId,
     verificationDoc: provider.verificationDoc,
     averageRating: avg,
+    ratingsCount,
     createdAt: provider.createdAt,
   });
 };
@@ -213,13 +209,13 @@ const getProvider = async (req, res) => {
 const updateProvider = async (req, res) => {
   const { id } = req.params;
   const idNum = Number(id);
+  if (!Number.isInteger(idNum) || idNum <= 0) {
+    return res.status(400).json({ message: 'Invalid provider id' });
+  }
 
-  // Separate user and provider fields
   const { fullName, email, password } = req.body;
   const providerFields = (({ location, phone, bio, profileImage, serviceType, faydaId, fanNumber, verificationDoc }) => ({ location, phone, bio, profileImage, serviceType, faydaId, fanNumber, verificationDoc }))(req.body);
 
-  // Normalize serviceType if provided
-  // Ensure at most one of faydaId (FIN) or fanNumber (FAN) is present; map fanNumber into faydaId for storage
   if (providerFields.faydaId && providerFields.fanNumber) {
     return res.status(400).json({ message: 'Provide either faydaId (FIN) or fanNumber (FAN), not both' });
   }
@@ -241,41 +237,51 @@ const updateProvider = async (req, res) => {
   };
 
   try {
-    // Find provider record by serviceProvider.id or userId
     let provider = await prisma.serviceProvider.findUnique({ where: { id: idNum } });
     if (!provider) provider = await prisma.serviceProvider.findUnique({ where: { userId: idNum } });
 
     if (!provider) {
-      // If there's no provider record, attempt to update user only (may be a user id)
       const existingUser = await prisma.user.findUnique({ where: { id: idNum } });
       if (!existingUser) return res.status(404).json({ message: 'Provider not found' });
 
+      const newEmail = email ? String(email).trim() : null;
+      if (newEmail) {
+        const emailTaken = await prisma.user.findFirst({ where: { email: { equals: newEmail, mode: 'insensitive' } }, select: { id: true } });
+        if (emailTaken && emailTaken.id !== existingUser.id) {
+          return res.status(409).json({ message: 'Email already exists' });
+        }
+      }
+
       const updateUserData = {};
       if (fullName) updateUserData.fullName = fullName;
-      if (email) updateUserData.email = email;
+      if (newEmail) updateUserData.email = newEmail;
       if (password) updateUserData.password = await bcrypt.hash(password, 10);
 
       const updatedUser = await prisma.user.update({ where: { id: idNum }, data: updateUserData });
       return res.json({ message: 'User updated (no service profile existed)', user: updatedUser });
     }
 
+    const userRecord = await prisma.user.findUnique({ where: { id: provider.userId }, select: { id: true, email: true } });
+    const newEmail = email ? String(email).trim() : null;
+    if (newEmail && userRecord) {
+      const emailTaken = await prisma.user.findFirst({ where: { email: { equals: newEmail, mode: 'insensitive' } }, select: { id: true } });
+      if (emailTaken && emailTaken.id !== userRecord.id) return res.status(409).json({ message: 'Email already exists' });
+    }
+
     // Build tx updates
     const userUpdates = {};
     if (fullName) userUpdates.fullName = fullName;
-    if (email) userUpdates.email = email;
+    if (newEmail) userUpdates.email = newEmail;
     if (password) userUpdates.password = await bcrypt.hash(password, 10);
 
-    // Normalize serviceType if present
     if (providerFields.serviceType) {
       const normalized = normalizeServiceType(providerFields.serviceType);
       if (!normalized) return res.status(400).json({ message: 'Invalid serviceType' });
       providerFields.serviceType = normalized;
     }
 
-    // Remove undefined provider fields
     Object.keys(providerFields).forEach((k) => providerFields[k] === undefined && delete providerFields[k]);
-
-    // Apply updates in a transaction
+   
     const [updatedUser, updatedProvider] = await prisma.$transaction([
       prisma.user.update({ where: { id: provider.userId }, data: userUpdates }),
       prisma.serviceProvider.update({ where: { id: provider.id }, data: providerFields }),
@@ -284,6 +290,10 @@ const updateProvider = async (req, res) => {
     return res.json({ user: updatedUser, provider: updatedProvider });
   } catch (err) {
     console.error('updateProvider error:', err);
+    
+    if (err?.code === 'P2002' && err?.meta?.modelName === 'User') {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
     return res.status(500).json({ message: 'Error updating provider' });
   }
 };
@@ -291,26 +301,25 @@ const updateProvider = async (req, res) => {
 const deleteProvider = async (req, res) => {
   const { id } = req.params;
   const idNum = Number(id);
+  if (!Number.isInteger(idNum) || idNum <= 0) {
+    return res.status(400).json({ message: 'Invalid provider id' });
+  }
 
   try {
-    // Find the service provider by either serviceProvider.id or by userId
     let provider = await prisma.serviceProvider.findUnique({ where: { id: idNum } });
 
     if (!provider) {
-      // Try to find by userId
       provider = await prisma.serviceProvider.findUnique({ where: { userId: idNum } });
     }
 
     if (!provider) {
-      // If still not found, check if the user exists and is a provider
       const user = await prisma.user.findUnique({ where: { id: idNum } });
       if (!user || user.role !== 'PROVIDER') {
         return res.status(404).json({ message: 'Provider not found' });
       }
-      // Find provider by userId (should exist, but double-check)
+
       provider = await prisma.serviceProvider.findUnique({ where: { userId: user.id } });
       if (!provider) {
-        // If no serviceProvider record, just delete the user
         await prisma.user.delete({ where: { id: user.id } });
         return res.json({ message: 'Provider user deleted' });
       }
@@ -318,16 +327,9 @@ const deleteProvider = async (req, res) => {
 
     // Delete dependent records in a transaction: ratings, messages, serviceProvider, then user
     await prisma.$transaction(async (tx) => {
-      // Delete ratings for this provider
       await tx.rating.deleteMany({ where: { providerId: provider.id } });
-
-      // Delete messages where sender or receiver is the provider's user
       await tx.message.deleteMany({ where: { OR: [{ senderId: provider.userId }, { receiverId: provider.userId }] } });
-
-      // Delete service provider record
       await tx.serviceProvider.delete({ where: { id: provider.id } });
-
-      // Finally delete user
       await tx.user.delete({ where: { id: provider.userId } });
     });
 

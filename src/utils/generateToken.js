@@ -20,15 +20,13 @@ const generateToken = (user, res) => {
   // Set role-specific cookie name so different roles can be logged out independently
   const roleCookieName = `jwt_${String(user.role).toLowerCase()}`;
 
-  // Primary role-specific cookie
   res.cookie(roleCookieName, token, {
-    httpOnly: true, // JS cannot access the cookie
+    httpOnly: true, 
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    maxAge: 1000 * 60 * 60 * 24 * 7, 
   });
 
-  // Also set a legacy `jwt` cookie for backward compatibility. We keep it only if not present.
   if (!res.getHeader('Set-Cookie') || !(res.getHeader('Set-Cookie')?.toString().includes('jwt='))) {
     res.cookie("jwt", token, {
       httpOnly: true,

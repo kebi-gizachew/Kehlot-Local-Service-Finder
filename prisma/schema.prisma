@@ -1,37 +1,20 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-// ===============================
-// Prisma Client Generator
-// ===============================
 generator client {
   provider = "prisma-client-js"
    url      = env("DATABASE_URL")
 
 }
-
-// ===============================
-// Database Connection
-// ===============================
 datasource db {
   provider = "postgresql"
 }
 
-// ===============================
-// ENUMS (User Roles)
-// ===============================
+
 enum Role {
   ADMIN
   PROVIDER
   USER
 }
 
-// ===============================
-// USER MODEL (AUTHENTICATION CORE)
-// ===============================
+
 model User {
   id                 Int      @id @default(autoincrement())
   fullName           String
@@ -48,9 +31,7 @@ model User {
   ratingsGiven Rating[]
 }
 
-// ===============================
-// SERVICE PROVIDER PROFILE
-// ===============================
+
 enum ServiceType {
   ELECTRICIAN
   MECHANIC
@@ -76,13 +57,15 @@ model ServiceProvider {
   verificationDoc String
   createdAt       DateTime    @default(now())
 
+  // Cached rating metrics
+  averageRating   Float?
+  ratingsCount    Int         @default(0)
+
   // Relations
   ratings       Rating[]
 }
 
-// ===============================
-// REVIEW & RATING
-// ===============================
+
 model Rating {
   id         Int      @id @default(autoincrement())
   rating     Int
@@ -96,9 +79,7 @@ model Rating {
   provider ServiceProvider @relation(fields: [providerId], references: [id])
 }
 
-// ===============================
-// REAL-TIME CHAT / MESSAGING
-// ===============================
+
 model Message {
   id         Int      @id @default(autoincrement())
   content    String?

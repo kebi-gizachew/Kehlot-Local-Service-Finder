@@ -1,10 +1,10 @@
 import 'dotenv/config';
 import express from "express";
+import http from "http";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connectDB, disconnectDB } from "./config/db.js";
 
-// Import routes
 import authRoutes from "./routes/authRoutes.js";
 import providerRoutes from "./routes/providerRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
@@ -14,53 +14,56 @@ import userRoutes from "./routes/userRoutes.js";
 import { initSocket } from "./utils/socket.js";
 
 
-
-
-// Initialize app
 const app = express();
-
-// Connect to database
 connectDB();
 
-// --------------------
-// Middlewares
-// --------------------
+import path from 'path';
+
+const REQUEST_LIMIT = process.env.REQUEST_LIMIT || '20mb'; // increased to support large base64 images
+
 app.use(cors({
-  origin: true,       // allow frontend origin
-  credentials: true,  // allow cookies
+  origin: true,       
+  credentials: true,  
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: REQUEST_LIMIT }));
+app.use(express.urlencoded({ limit: REQUEST_LIMIT, extended: true, parameterLimit: 10000 }));
 app.use(cookieParser());
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use((err, req, res, next) => {
+  if (!err) return next();
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    console.warn('Payload too large:', err.message);
+    return res.status(413).json({ success: false, message: `Payload too large. Maximum allowed size is ${REQUEST_LIMIT}` });
+  }
+  next(err);
+});
 
-// --------------------
-// Routes
-// --------------------
+
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/users", userRoutes);
-// Messages: keep existing mount and add an /api/messages alias for compatibility
 app.use("/messages", messageRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/ratings", ratingRoutes);
 
-// Health check
 app.get("/", (req, res) => {  
   res.json({ message: "Kihlot API is running" });
 });
 
-// --------------------
-// Server
-// --------------------
 const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
 
-const server = app.listen(PORT, () => {
+if (!process.env.JWT_SECRET) {
+  console.warn('Environment variable JWT_SECRET is not set. Socket authentication and JWT signing will be insecure or fail. Set JWT_SECRET in your environment for production.');
+}
+
+server.listen(PORT, () => {
   console.log(` Server running on PORT ${PORT}`);
 });
 
-// Initialize Socket.IO
+// Initialize Socket.IO with the HTTP server instance
 try {
   initSocket(server);
   console.log("Socket.IO initialized");
@@ -68,11 +71,7 @@ try {
   console.error("Failed to initialize Socket.IO:", err);
 }
 
-// --------------------
-// Error & Shutdown Handling
-// --------------------
 
-// Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   console.error("Unhandled Rejection:", err);
   server.close(async () => {
@@ -81,14 +80,12 @@ process.on("unhandledRejection", (err) => {
   });
 });
 
-// Handle uncaught exceptions
 process.on("uncaughtException", async (err) => {
   console.error("Uncaught Exception:", err);
   await disconnectDB();
   process.exit(1);
 });
 
-// Graceful shutdown (e.g. production stop)
 process.on("SIGTERM", async () => {
   console.log("SIGTERM received. Shutting down gracefully...");
   server.close(async () => {

@@ -4,9 +4,6 @@ import { prisma } from "../config/db.js";
 import generateToken from "../utils/generateToken.js";
 
 
-/**
- * USER REGISTRATION (Service Seeker)
- */
 const registerUser = async (req, res) => {
   try {
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -20,7 +17,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Accept both `name` and `fullName` from clients
     const { name, fullName: fullNameFromBody, email, password } = req.body;
     const fullName = fullNameFromBody || name;
 
@@ -51,9 +47,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-/**
- * LOGIN (Admin, Provider, User)
- */
+
 const login = async (req, res) => {
   try {
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -73,7 +67,22 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields: email, password" });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    // Query the user with a small retry on transient DB I/O errors (e.g., Neon adapter transient failures)
+    let user = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        user = await prisma.user.findUnique({ where: { email } });
+        break;
+      } catch (dbErr) {
+        console.error(`login: database lookup attempt ${attempt} failed:`, dbErr?.message || dbErr);
+        if (attempt === 3) {
+          console.error('login: final DB lookup error (full):', dbErr);
+          return res.status(503).json({ message: 'Database temporarily unavailable. Please try again.' });
+        }
+        await new Promise((r) => setTimeout(r, 100 * attempt));
+      }
+    }
+
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -85,21 +94,48 @@ const login = async (req, res) => {
 
     const token = generateToken(user, res);
 
-    res.json({
+    // Build base response
+    const response = {
       message: "Login successful",
       role: user.role,
       mustChangePassword: user.mustChangePassword,
       token, // returned for clients that prefer Authorization: Bearer <token>
-    });
+    };
+
+    if (user.role === "PROVIDER") {
+      try {
+        const provider = await prisma.serviceProvider.findUnique({
+          where: { userId: user.id },
+          select: {
+            id: true,
+            serviceType: true,
+            phone: true,
+            location: true,
+            bio: true,
+            profileImage: true,
+            faydaId: true,
+            verificationDoc: true,
+            averageRating: true,
+            ratingsCount: true,
+            createdAt: true,
+          },
+        });
+
+        if (provider) {
+          response.provider = provider;
+        }
+      } catch (err) {
+        console.error("login: failed to load provider profile:", err);
+      }
+    }
+
+    return res.json(response);
   } catch (err) {
     console.error("login error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/**
- * CHANGE PASSWORD (First login for providers)
- */
 const changePassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
@@ -125,25 +161,35 @@ const changePassword = async (req, res) => {
   res.json({ message: "Password changed successfully" });
 };
 
-/**
- * GET PROFILE (Provider)
- */
+
 const getProviderProfile = async (req, res) => {
   try {
     // If a provider id param is present, fetch by ServiceProvider.id (public profile)
     const providerIdParam = req.params?.id;
 
     if (providerIdParam) {
+      const idNum = Number(providerIdParam);
+      if (!Number.isInteger(idNum) || idNum <= 0) {
+        return res.status(400).json({ message: "Invalid provider id" });
+      }
+
       const provider = await prisma.serviceProvider.findUnique({
-        where: { id: Number(providerIdParam) },
-        include: { user: true, ratings: true },
+        where: { id: idNum },
+        select: { user: true, ratings: { select: { rating: true, userId: true } }, averageRating: true, ratingsCount: true },
       });
 
       if (!provider) {
         return res.status(404).json({ message: "Provider not found" });
       }
 
-      const avg = provider.ratings && provider.ratings.length ? provider.ratings.reduce((s, r) => s + r.rating, 0) / provider.ratings.length : null;
+      // Prefer cached metrics when available, fall back to computing from ratings
+      const avg = typeof provider.averageRating === 'number' && provider.averageRating !== null
+        ? Number(provider.averageRating.toFixed(1))
+        : (provider.ratings && provider.ratings.length ? Number((provider.ratings.reduce((s, r) => s + r.rating, 0) / provider.ratings.length).toFixed(1)) : null);
+
+      const ratingsCount = typeof provider.ratingsCount === 'number' && provider.ratingsCount !== null
+        ? provider.ratingsCount
+        : (provider.ratings ? new Set(provider.ratings.map((r) => r.userId)).size : 0);
 
       return res.json({
         id: provider.id,
@@ -155,6 +201,7 @@ const getProviderProfile = async (req, res) => {
         bio: provider.bio,
         profileImage: provider.profileImage,
         averageRating: avg,
+        ratingsCount,
         createdAt: provider.createdAt,
       });
     }
@@ -173,6 +220,23 @@ const getProviderProfile = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
+    // If provider record exists, fetch cached metrics and return profile info
+    let ratingsCountForSelf = 0;
+    let avgForSelf = null;
+    if (user.serviceProvider && user.serviceProvider.id) {
+      try {
+        const provider = await prisma.serviceProvider.findUnique({
+          where: { id: user.serviceProvider.id },
+          select: { averageRating: true, ratingsCount: true, phone: true, location: true, serviceType: true, bio: true, profileImage: true, faydaId: true, verificationDoc: true },
+        });
+
+        ratingsCountForSelf = typeof provider?.ratingsCount === 'number' ? provider.ratingsCount : 0;
+        avgForSelf = typeof provider?.averageRating === 'number' && provider.averageRating !== null ? Number(provider.averageRating.toFixed(1)) : null;
+      } catch (err) {
+        console.error('getProviderProfile: failed to fetch provider metrics:', err);
+      }
+    }
+
     res.json({
       id: user.id,
       fullName: user.fullName,
@@ -181,8 +245,11 @@ const getProviderProfile = async (req, res) => {
       location: user.serviceProvider?.location,
       serviceType: user.serviceProvider?.serviceType,
       bio: user.serviceProvider?.bio,
+      profileImage: user.serviceProvider?.profileImage,
       faydaId: user.serviceProvider?.faydaId,
       verificationDoc: user.serviceProvider?.verificationDoc,
+      averageRating: avgForSelf,
+      ratingsCount: ratingsCountForSelf,
     });
   } catch (err) {
     console.error("getProviderProfile error:", err);
@@ -199,10 +266,6 @@ const getProviderProfile = async (req, res) => {
   }
 };
 
-/**
- * LOGOUT
- * (Client deletes token – backend confirms)
- */
 const logout = (req, res) => {
   try {
     const role = req.body?.role || req.query?.role;
@@ -253,8 +316,6 @@ const getProvidersByCategory = async (req, res) => {
         message: "Service type is required",
       });
     }
-
-    // Normalize and validate against known enum values
     const normalized = String(serviceType).toUpperCase();
     const validTypes = [
       "ELECTRICIAN",
@@ -269,27 +330,26 @@ const getProvidersByCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid service type" });
     }
 
-    // Build where clause with optional location filter (case-insensitive)
     const where = { serviceType: normalized };
     if (location) {
       where.location = { contains: String(location), mode: "insensitive" };
     }
 
-    // Fetch providers and include related user and ratings
     const providersRaw = await prisma.serviceProvider.findMany({
       where,
       include: {
         user: { select: { fullName: true, email: true } },
-        ratings: { select: { rating: true } },
+        ratings: { select: { rating: true, userId: true } },
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    // Map to response shape and compute averageRating
+    // Map to response shape and compute averageRating and ratingsCount
     const providers = providersRaw.map((p) => {
-      const avg = p.ratings && p.ratings.length ? p.ratings.reduce((s, r) => s + r.rating, 0) / p.ratings.length : null;
+      const avg = p.ratings && p.ratings.length ? Number((p.ratings.reduce((s, r) => s + r.rating, 0) / p.ratings.length).toFixed(1)) : null;
+      const ratingsCount = p.ratings ? new Set(p.ratings.map((r) => r.userId)).size : 0;
 
       return {
         id: p.id,
@@ -301,6 +361,7 @@ const getProvidersByCategory = async (req, res) => {
         phone: p.phone,
         profileImage: p.profileImage,
         averageRating: avg,
+        ratingsCount,
         createdAt: p.createdAt,
       };
     });
@@ -348,13 +409,14 @@ const filterProvidersByCategories = async (req, res) => {
       where: { serviceType: { in: normalized } },
       include: {
         user: { select: { id: true, fullName: true, email: true } },
-        ratings: { select: { rating: true } },
+        ratings: { select: { rating: true, userId: true } },
       },
       orderBy: { createdAt: "desc" },
     });
 
     const providers = providersRaw.map((p) => {
       const avg = p.ratings && p.ratings.length ? p.ratings.reduce((s, r) => s + r.rating, 0) / p.ratings.length : null;
+      const ratingsCount = p.ratings ? new Set(p.ratings.map((r) => r.userId)).size : 0;
 
       return {
         id: p.user.id,
@@ -366,6 +428,7 @@ const filterProvidersByCategories = async (req, res) => {
         phone: p.phone,
         profileImage: p.profileImage,
         averageRating: avg,
+        ratingsCount,
         createdAt: p.createdAt,
       };
     });

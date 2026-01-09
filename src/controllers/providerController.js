@@ -30,7 +30,7 @@ export const getProviderProfile = async (req, res) => {
     }
 
     const ratings = provider.ratings.map(r => r.rating);
-    const averageRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length: 0;
+    const averageRating = ratings.length > 0 ? Number((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)) : 0;
 
     res.status(200).json({
         id: provider.id,
