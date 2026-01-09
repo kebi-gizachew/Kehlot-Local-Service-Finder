@@ -73,6 +73,37 @@ Opening HTML files directly (file://)
 Any setup that results in file:// URLs
 
 Misconfigured Live Server that serves files without HTTP context
+## For security reasons, the .env file is not included in the repository.
+
+### Step 1: Navigate to the Backend folder
+cd Backend
+
+### Step 2:
+- Create a .env file
+
+- Create a new file named .env inside the Backend directory.
+
+### Step 3: Copy variables from .env.example
+
+Use the provided .env.example file as a reference and add your own values:
+
+- DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+JWT_SECRET=your_jwt_secret
+JWT_ADMIN=your_admin_jwt_secret
+JWT_PROVIDER=your_provider_jwt_secret
+PORT=5003
+
+### Step 4: Fill in your own credentials
+
+Replace database placeholders with your local or cloud database details
+
+Set your own secure JWT secrets
+
+⚠️ Do not share or commit your .env file
+
+### Step 5: Start the backend server
+npx prisma generate
+npm run dev
 
 ## ✨ Features
 
