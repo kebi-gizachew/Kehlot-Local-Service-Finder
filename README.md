@@ -23,10 +23,10 @@ Open a terminal in the project root
 
 ## ▶️ Running the Application
 ### 🔹 Backend (API Server)
-cd Backend
-npm install
-npx prisma generate
-npm run dev
+- cd Backend
+- npm install
+- npx prisma generate
+- npm run dev
 
 
 Starts the backend server with auto-reload
@@ -39,9 +39,9 @@ Handles authentication, chat, providers, and admin APIs
 The frontend MUST be served via an HTTP server (not file://) for full functionality (especially clipboard & image features).
 
 Option 1: Node.js (Recommended)
-cd Frontend
-npm install
-npm run serve
+- cd Frontend
+- npm install
+- npm run serve
 
 
 Runs at:
@@ -131,15 +131,15 @@ Password: 12345678
 
 # 📌 Quick Summary (TL;DR)
 ## Backend
-cd Backend
-npm install
-npx prisma generate
-npm run dev
+- cd Backend
+- npm install
+- npx prisma generate
+- npm run dev
 
 ## Frontend
-cd Frontend
-npm install
-npm run serve
+- cd Frontend
+- npm install
+- npm run serve
 
 
 ## Open in browser:
