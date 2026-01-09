@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  url      = env("DATABASE_URL")
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+
+  ratings       Rating[]
+  conversations Conversation[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Admin {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id        String            @id @default(uuid())
+  name      String            @unique
+  providers ServiceProvider[]
+
+  createdAt DateTime @default(now())
+}
+
+model ServiceProvider {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  phoneNumber   String
+  location      String
+  bio           String?
+  profileImage  String?
+  faydaIdImage  String?
+  verificationPic String?
+  conversations Conversation[]
+  isVerified    Boolean        @default(false)
+  averageRating Float          @default(0)
+  totalRatings  Int            @default(0)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  ratings Rating[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Rating {
+  id     String @id @default(uuid())
+  rating Int
+
+  userId     String
+  providerId String
+
+  user     User            @relation(fields: [userId], references: [id])
+  provider ServiceProvider @relation(fields: [providerId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, providerId])
+}
+
+model Conversation {
+  id String @id @default(uuid())
+
+  userId     String
+  providerId String
+
+  user     User            @relation(fields: [userId], references: [id])
+  provider ServiceProvider @relation(fields: [providerId], references: [id])
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, providerId])
+}
+
+model Message {
+  id      String @id @default(uuid())
+  content String?
+  image   String?
+  sender   SenderType
+  senderId String
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+enum SenderType {
+  USER
+  PROVIDER
+}

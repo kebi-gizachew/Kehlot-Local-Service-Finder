@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Provider Details - Kehlot</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+:root {
+    --kihlot-teal: #0F98B3;
+    --text-gray: #64748b;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, sans-serif;
+    background: #f8fafc;
+}
+
+.hidden { display: none; }
+
+.kehlot-header {
+    background: white;
+    padding: 12px 5%;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+
+.brand-name {
+    font-weight: 800;
+    color: var(--kihlot-teal);
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.content-wrapper {
+    max-width: 800px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+/* ================= PROFILE CARD ================= */
+
+.profile-card {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 520px;
+    margin: auto;
+    padding-bottom: 30px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    overflow: hidden;
+    text-align: center;
+}
+
+.profile-banner {
+    background: var(--kihlot-teal);
+    height: 110px;
+}
+
+.profile-avatar {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 20px;
+    border: 6px solid #fff;
+    margin-top: -55px;
+}
+
+.profile-name {
+    font-size: 1.7rem;
+    font-weight: 800;
+    margin: 12px 0 2px;
+}
+
+.profile-role {
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.profile-rating {
+    margin: 10px 0 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-rating i {
+    color: #f6ad55;
+}
+
+.profile-rating span {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-left: 6px;
+}
+
+.profile-bio {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 18px;
+    margin: 0 24px 20px;
+    text-align: left;
+}
+
+.profile-bio h4 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+}
+
+.profile-bio p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.profile-info {
+    text-align: left;
+    padding: 0 30px;
+    font-size: 0.95rem;
+}
+
+.profile-info p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    color: #334155;
+}
+
+.profile-info i {
+    color: var(--kihlot-teal);
+    width: 18px;
+}
+
+.btn-messages {
+    margin: 25px 24px 0;
+    border: 2px solid var(--kihlot-teal);
+    background: white;
+    color: var(--kihlot-teal);
+    font-weight: 700;
+    padding: 14px;
+    width: calc(100% - 48px);
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-messages:hover {
+    background: var(--kihlot-teal);
+    color: white;
+}
+
+/* ================= MESSAGES ================= */
+
+.back-btn {
+    margin-bottom: 15px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.conversation {
+    display: flex;
+    gap: 15px;
+    padding: 18px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.conversation:hover {
+    background: #f1f5f9;
+}
+
+.user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--kihlot-teal);
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+ .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+
+        .modal-content {
+            background: white; padding: 30px; border-radius: 20px; width: 90%;
+            max-width: 380px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .btn-yes-logout {
+            background: #ff4d4d; color: white; border: none; padding: 14px;
+            border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 10px;
+        }
+        .profile-avatar-letter {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #0F98B3;
+    color: white;
+    font-size: 48px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -60px auto 10px;
+    text-transform: uppercase;
+}
+
+</style>
+</head>
+
+<body>
+
+<nav class="kehlot-header">
+    <div class="brand-name" onclick="location.href='providers.html'">Kehlot</div>
+</nav>
+<div id="logoutModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Logout</h2>
+        <p style="color:var(--text-gray)">Are you sure you want to exit Kehlot?</p>
+        <button class="btn-yes-logout" onclick="logout()">Yes, Exit</button>
+        <button style="margin-top:15px; background:none; border:none; color:var(--text-gray); cursor:pointer;" onclick="toggleLogout(false)">Cancel</button>
+    </div>
+</div>
+<main class="content-wrapper">
+
+<!-- ================= PROFILE PAGE ================= -->
+<div id="page-profile">
+    <span class="logout-link" onclick="toggleLogout(true)">
+               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+               Logout
+           </span>
+    <div class="profile-card" id="profile-container">
+        <p style="padding:30px">Loading provider...</p>
+    </div>
+</div>
+
+<!-- ================= MESSAGES PAGE ================= -->
+<div id="page-messages" class="hidden">
+    <div class="back-btn" onclick="showPage('page-profile')">
+        ← Back to Profile
+    </div>
+    <div class="profile-card" id="conversations-list">
+        <p style="padding:20px">Loading conversations...</p>
+    </div>
+</div>
+
+</main>
+
+<script>
+const providerId = new URLSearchParams(window.location.search).get('id');
+
+/* ---------- PAGE SWITCH ---------- */
+function showPage(pageId) {
+    document.getElementById('page-profile').classList.add('hidden');
+    document.getElementById('page-messages').classList.add('hidden');
+    document.getElementById(pageId).classList.remove('hidden');
+}
+
+/* ---------- FETCH PROVIDER ---------- */
+async function fetchProvider() {
+    const res = await fetch(
+        `http://localhost:5003/api/provider/profile/${providerId}`,
+        { credentials: 'include' }
+    );
+    return res.json();
+}
+ function toggleLogout(show) {
+        document.getElementById('logoutModal').style.display = show ? 'flex' : 'none';
+    }
+
+    async function logout() {
+        const user=await fetch('http://localhost:5003/api/provider/clearCookie', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        if (user.status === 200) {
+        localStorage.removeItem('seekerLoggedIn');
+        window.location.href = '../homepage.html';
+    }else{
+        alert('Logout failed. Please try again.');
+    }
+    }
+/* ---------- RENDER PROFILE ---------- */
+async function renderProfile() {
+    const provider = await fetchProvider();
+
+    const rating = Number(provider.averageRating || 0);
+    const reviews = provider.totalRatings || 0;
+
+    const fullStars = Math.round(rating);
+    const emptyStars = 5 - fullStars;
+    const firstLetter = provider.name ? provider.name.charAt(0).toUpperCase() : '?';
+
+    document.getElementById('profile-container').innerHTML = `
+        <div class="profile-banner"></div>
+
+         ${
+        provider.profileImage
+        ? `
+           <img src="${provider.profileImage || '../pic/default-avatar.jpg'}" class="profile-avatar" onerror="this.src='../pic/default-avatar.jpg'">
+          `
+        : `
+            <div class="profile-avatar-letter">
+                ${firstLetter}
+            </div>
+          `
+    }
+
+        <h2 class="profile-name">${provider.name}</h2>
+        <p class="profile-role">Professional Service Provider</p>
+
+        <div class="profile-rating">
+            ${'<i class="fa-solid fa-star"></i>'.repeat(fullStars)}
+            ${'<i class="fa-regular fa-star"></i>'.repeat(emptyStars)}
+            <span>${rating.toFixed(1)} (${reviews} Reviews)</span>
+        </div>
+
+        <div class="profile-bio">
+            <h4>Bio</h4>
+            <p>${provider.bio || 'No bio available.'}</p>
+        </div>
+
+        <div class="profile-info">
+            <p><i class="fa-solid fa-location-dot"></i>${provider.location || 'Not specified'}</p>
+            <p><i class="fa-solid fa-phone"></i>${provider.phoneNumber || 'N/A'}</p>
+            <p><i class="fa-solid fa-envelope"></i>${provider.email}</p>
+        </div>
+
+        <button class="btn-messages" onclick="openMessagesPage()">
+            <i class="fa-solid fa-comment"></i>
+            View Messages
+        </button>
+       <h3 
+  style="
+    text-align:center; 
+    color:#555555;  /* lighter black */
+    font-size:14px; 
+    margin-bottom:20px; 
+    font-family: Arial, sans-serif; 
+    cursor:pointer;
+    transition: color 0.3s;
+  "
+  onclick="changePassword()"
+  onmouseover="this.style.color='#000000'"
+  onmouseout="this.style.color='#555555'"
+>
+  Change Password
+</h3>
+    `;
+}
+
+
+async function openMessagesPage() {
+    showPage('page-messages');
+    await renderConversations();
+}
+async function changePassword(provId) {
+    try {
+
+      // Prompt the user for a new password
+      const newPassword = prompt("Enter your new password:");
+      if (!newPassword) {
+        alert("Password cannot be empty.");
+        return;
+      }
+
+      // Send the password to backend
+      const response = await fetch(`http://localhost:5003/api/provider/changePassword/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password: newPassword }),
+        credentials: "include" 
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Password changed successfully!");
+      } else {
+        alert("Error: " + (result.message || "Failed to change password"));
+      }
+
+    } catch (err) {
+      console.error("Error changing password:", err);
+      alert("An error occurred. Check console for details.");
+    }}
+
+/* ---------- CONVERSATIONS ---------- */
+async function renderConversations() {
+    const container = document.getElementById('conversations-list');
+    container.innerHTML = '<p style="padding:20px">Loading conversations...</p>';
+
+    const conversations = await fetch(
+        'http://localhost:5003/api/messages/provider/conversations',
+        { credentials: 'include' }
+    ).then(r => r.json());
+
+    if (!conversations.length) {
+        container.innerHTML = '<p style="padding:20px">No messages yet.</p>';
+        return;
+    }
+
+    let html = '';
+
+    for (const convo of conversations) {
+        const user = await fetch(
+            `http://localhost:5003/api/user/profile/${convo.userId}`,
+            { credentials: 'include' }
+        ).then(r => r.json());
+
+        html += `
+            <div class="conversation" onclick="goToChat('${convo.id}')">
+                <div class="user-avatar">${user.name?.[0] || 'U'}</div>
+                <div style="flex:1">
+                    <strong>${user.name}</strong>
+                    <p style="font-size:12px;color:#64748b">Tap to open chat</p>
+                </div>
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+/* ---------- GO TO CHAT ---------- */
+function goToChat(conversationId) {
+    window.location.href = `chat.html?conversationId=${conversationId}`;
+}
+
+/* ---------- INIT ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+    if (providerId) renderProfile();
+});
+</script>
+
+</body>
+</html>

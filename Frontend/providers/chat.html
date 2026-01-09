@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kehlot Chat</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Socket.IO client -->
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+
+    <style>
+       
+        :root {
+    --kehlot-teal: #0F98B3;
+    --bg-chat: #F0F2F5;
+    --bubble-sent: #0F98B3;
+    --bubble-received: #FFFFFF;
+    --text-dark: #1F2937;
+    --text-muted: #6B7280;
+}
+
+/* =========================
+   BASE
+========================= */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-chat);
+    overflow: hidden;
+}
+
+.app-shell {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chat-container {
+    width: 100%;
+    max-width: 720px;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+/* =========================
+   HEADER
+========================= */
+.chat-header {
+    background: var(--kehlot-teal);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-name {
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-status {
+    font-size: 12px;
+    opacity: 0.85;
+}
+
+/* =========================
+   CHAT BODY
+========================= */
+.chat-body {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background: var(--bg-chat);
+    display: flex;
+    flex-direction: column;
+    scroll-behavior: smooth;
+}
+
+/* =========================
+   MESSAGE WRAPPER
+========================= */
+.message {
+    display: flex;
+    margin-bottom: 6px;
+    max-width: 100%;
+}
+
+.message.sent {
+    justify-content: flex-end;
+}
+
+.message.received {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 72%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   SENDER INFO
+========================= */
+.sender-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.sender-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--kehlot-teal);
+    color: white;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sender-name {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* =========================
+   MESSAGE BUBBLES
+========================= */
+.bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-break: break-word;
+    position: relative;
+}
+
+.sent .bubble {
+    background: var(--bubble-sent);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.received .bubble {
+    background: var(--bubble-received);
+    color: var(--text-dark);
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+/* =========================
+   MESSAGE TIME
+========================= */
+.message-time {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 4px;
+    text-align: right;
+    display:flex;
+    cursor:pointer;
+    justify-content:space-between;
+    align-items: center;
+}
+.message-time p{
+    padding-right:20px;
+    font-size:12px;
+}
+/* =========================
+   IMAGES
+========================= */
+.message-image img {
+    max-width: 220px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* =========================
+   TYPING INDICATOR
+========================= */
+.typing-indicator {
+    display: none;
+    gap: 4px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 18px;
+    width: fit-content;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    margin-bottom: 8px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #999;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(3) { animation-delay: -0.32s; }
+
+@keyframes typing {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* =========================
+   FOOTER
+========================= */
+.chat-footer {
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+}
+
+.chat-input {
+    flex: 1;
+    background: #f1f3f4;
+    border-radius: 18px;
+    padding: 8px 14px;
+    font-size: 14px;
+    outline: none;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.send-btn {
+    background: var(--kehlot-teal);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =========================
+   FILE PREVIEW
+========================= */
+.file-preview {
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+}
+
+.file-preview img {
+    max-width: 60px;
+    max-height: 60px;
+    border-radius: 8px;
+}
+
+.remove-file {
+    color: red;
+    cursor: pointer;
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="app-shell">
+    <div class="chat-container">
+        <!-- Connection Status Bar -->
+        <div class="connection-status hidden" id="connection-status"></div>
+        
+        <!-- Chat Header -->
+        <header class="chat-header">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div id="header-avatar" class="header-avatar fallback"></div>
+            <div class="header-info">
+                <div id="header-name" class="header-name">Loading...</div>
+                <div id="header-status" class="header-status">Last Seen today.</div>
+            </div>
+        </header>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-body">
+            <div class="loading" id="loading">Loading messages...</div>
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+            <div id="chatContainer"></div>
+        </div>
+        <div id="file-preview" class="file-preview" style="display:none;"></div>
+
+        <!-- Chat Footer -->
+        <footer class="chat-footer">
+            <label for="fileInput" class="attach-btn">
+        <i class="fa-solid fa-paperclip"></i>
+    </label>
+
+    <!-- Hidden file input -->
+    <input 
+        type="file" 
+        id="fileInput" 
+        accept="image/*"
+        style="display:none"
+    />
+            <div 
+                id="msg-input" 
+                class="chat-input" 
+                contenteditable="true" 
+                data-placeholder="Type a message..."
+                onkeypress="handleKeyPress(event)"
+            ></div>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </footer>
+    </div>
+</div>
+
+<script>
+// ==========================
+// CHAT APPLICATION - MAIN LOGIC
+// ==========================
+// ==========================
+// CHAT APPLICATION - MAIN LOGIC
+// ==========================
+
+// Get conversation ID from URL
+const params = new URLSearchParams(window.location.search);
+const conversationId = params.get("conversationId");
+console.log("Conversation ID:", conversationId);
+
+// Global variables
+let role = null;
+let ownerId = null;
+let otherId = null;
+let socket = null;
+let otherName=null;
+// Function to get cookie name from server
+async function getCookieName() {
+    try {
+        const response = await fetch("http://localhost:5003/api/cookie/getCookieName", {
+            method: 'GET',
+            credentials: 'include'
+        });
+        const data = await response.json();
+        console.log("Cookie name from server:", data);
+        return data.cookieName || data.name; // Adjust based on your API response
+    } catch (error) {
+        console.error("Error getting cookie name:", error);
+        return null;
+    }
+}
+
+// Check authentication and initialize
+async function initChat() {
+    try {
+        console.log("Initializing chat...");
+        
+        // Get cookie name and set role
+        const cookieName = await getCookieName();
+        console.log("Cookie name received:", cookieName);
+        
+        if (cookieName === 'providerCookie') {
+            role = "Provider";
+        } else if (cookieName === 'cookie') {
+            role = "User";
+        } else {
+            console.error("Invalid cookie name:", cookieName);
+            alert("Please log in to access the chat.");
+            window.location.href = '../portal.html';
+            return;
+        }
+        
+        console.log("Role determined:", role);
+        
+        // Get owner ID based on role
+        await getOwnerId();
+        console.log("Owner ID:", ownerId);
+        
+        // Get other participant ID
+        await getOtherId();
+        console.log("Other ID:", otherId);
+        await getOtherName();
+        console.log("Other Name:", otherName);
+        
+        // Load recipient info
+        await loadRecipientInfo();
+        
+        // Initialize socket connection
+        initSocket();
+        
+        // Load messages
+        await loadMessages();
+        
+        // Enable send button
+        document.getElementById('send-btn').disabled = false;
+        
+        console.log("Chat initialized successfully");
+        
+    } catch (error) {
+        console.error("Initialization error:", error);
+        showToast("Failed to initialize chat", "error");
+    }
+}
+
+// Get owner ID from server
+async function getOwnerId() {
+    try {
+        console.log("Getting owner ID for role:", role);
+        const endpoint = role === "Provider" 
+            ? 'http://localhost:5003/api/provider/getIdProvider'
+            : 'http://localhost:5003/api/user/getIdUser';
+            
+        console.log("Fetching from:", endpoint);
+        
+        const res = await fetch(endpoint, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        console.log("Owner ID response:", data);
+        
+        ownerId = data.id || data.userId || data.providerId;
+        
+        if (!ownerId) {
+            throw new Error("Could not get owner ID from response");
+        }
+        
+    } catch (error) {
+        console.error("Error getting owner ID:", error);
+        throw error;
+    }
+}
+async function getOtherName(){
+    try{
+        console.log("Getting other participant name for ID:", otherId);
+        let endpoint;
+        if (role==="User"){
+            endpoint=`http://localhost:5003/api/provider/profile/${otherId}`;
+        }else if (role==="Provider"){
+            endpoint=`http://localhost:5003/api/user/profile/${otherId}`;
+        }
+        console.log("Fetching other participant from:", endpoint);
+        const res=await fetch(endpoint,{
+            method:'GET',
+            credentials:'include'
+        });
+        if(!res.ok){
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data=await res.json();
+        console.log("Other participant info:",data);
+        otherName=data.name || 'Unknown';
+    }catch(error){
+        console.error("Error getting other participant name:",error);
+        throw error;
+    }
+}
+// Get other participant ID
+async function getOtherId() {
+    try {
+        if (!conversationId) {
+            throw new Error("No conversation ID");
+        }
+        
+        console.log("Getting other participant ID for conversation:", conversationId);
+        const response = await fetch(`http://localhost:5003/api/messages/conversation/conv/${conversationId}`, {
+            method: 'GET',
+            credentials: 'include' // Send cookies for authentication
+        });
+        const data = await response.json();
+        if (role==="User"){
+            otherId = data.providerId || data.provider?.id;
+        }else if (role==="Provider"){
+            otherId = data.userId || data.user?.id;
+        }
+        console.log("Determined other ID:", otherId);
+        if (!otherId) {
+            throw new Error("Could not get other participant ID from response");
+        }
+        
+    } catch (error) {
+        console.error("Error getting other ID:", error);
+        throw error;
+    }
+}
+
+// Load recipient information
+async function loadRecipientInfo() {
+    try {
+        if (!otherId) {
+            throw new Error("No otherId to load recipient info");
+        }
+        
+        console.log("Loading recipient info for ID:", otherId, "Role:", role);
+        
+        let endpoint;
+        if (role === "User") {
+            endpoint = `http://localhost:5003/api/provider/profile/${otherId}`;
+        } else {
+            endpoint = `http://localhost:5003/api/user/profile/${otherId}`;
+        }
+        
+        console.log("Fetching recipient from:", endpoint);
+        
+        const res = await fetch(endpoint, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        console.log("Recipient info:", data);
+        updateHeader(data);
+        
+    } catch (error) {
+        console.error("Error loading recipient info:", error);
+        showToast("Could not load recipient information", "error");
+    }
+}
+
+// Update chat header with recipient info
+function updateHeader(data) {
+    const headerName = document.getElementById('header-name');
+    const headerAvatar = document.getElementById('header-avatar');
+    const headerStatus = document.getElementById('header-status');
+    
+    headerName.innerHTML = data.name || 'Unknown';
+    headerStatus.innerHTML = 'Online';
+    
+    if (data.profileImage) {
+        let imageUrl = data.profileImage;
+        if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+            imageUrl = `${data.profileImage}`;
+        } else if (imageUrl.startsWith('/')) {
+            imageUrl = `http://localhost:5003${data.profileImage}`;
+        }
+        
+        headerAvatar.innerHTML = `<img src="${imageUrl}" alt="${data.name}" onerror="handleImageError(this)">`;
+        headerAvatar.classList.remove('fallback');
+    } else {
+        headerAvatar.classList.add('fallback');
+        const initials = (data.name || '??').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        headerAvatar.textContent = initials;
+    }
+}
+
+function handleImageError(img) {
+    img.onerror = null;
+    const parent = img.parentElement;
+    parent.classList.add('fallback');
+    const initials = parent.parentElement.querySelector('.header-name').textContent
+        .split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    parent.innerHTML = initials;
+    img.remove();
+}
+
+// Load messages
+async function loadMessages() {
+    try {
+        console.log("Loading messages for conversation:", conversationId);
+        
+        const res = await fetch(`http://localhost:5003/api/messages/messages/${conversationId}`, {
+            credentials: 'include'
+        });
+        
+        
+        const messages = await res.json();
+        console.log("Messages loaded:", messages.length);
+        
+        const chatContainer = document.getElementById('chatContainer');
+        const loadingEl = document.getElementById('loading');
+        
+        chatContainer.innerHTML = '';
+        
+        if (!Array.isArray(messages) || messages.length === 0) {
+            chatContainer.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">No messages yet. Start the conversation!</div>';
+            loadingEl.style.display = 'none';
+            return;
+        }
+        
+        messages.forEach(msg => renderMessage(msg));
+        loadingEl.style.display = 'none';
+        scrollToBottom();
+        
+    } catch (error) {
+        console.error("Error loading messages:", error);
+        document.getElementById('loading').innerHTML = 'Failed to load messages';
+        showToast("Could not load messages", "error");
+    }
+}
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result); // result includes "data:image/png;base64,..."
+    reader.onerror = error => reject(error);
+  });
+}
+
+// Usage
+
+
+
+// Render a single message
+function renderMessage(msg) {
+    const chatContainer = document.getElementById('chatContainer');
+    const isOwner = msg.senderId === ownerId;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isOwner ? 'sent' : 'received'}`;
+    
+    const time = new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            ${!isOwner ? `
+                <div class="sender-info">
+                    <div class="sender-avatar">${otherName[0]}</div>
+                    <div class="sender-name">${otherName || 'User'}</div>
+                </div>
+            ` : ''}
+            <div class="bubble">
+                  ${msg.image ? `
+            <div class="message-image">
+                <img src="${msg.image}" alt="sent image" />
+            </div>
+        ` : ''}
+  ${msg.content ? `<div class="message-text">${escapeHtml(msg.content)}</div>` : ''}
+            
+                <div class="message-time"><p class="deletion-btn" onclick="deleteMessage('${msg.id}', '${msg.senderId}')">Delete</p> ${time}</div>
+            </div>
+        </div>
+    `;
+    
+    chatContainer.appendChild(messageDiv);
+    return messageDiv;
+}
+async function deleteMessage(id,senderId) {
+  try {
+    console.log("deleting")
+    if(senderId==ownerId){
+        const del=await fetch(`http://localhost:5003/api/messages/messages/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (del.ok) {
+            alert("Message deleted successfully", "success");
+            window.location.reload();
+        } else {
+            alert("Failed to delete message", "error");
+        }
+
+    }else{
+        alert("You are not authorized to delete this message");
+    }
+}catch (error){
+    console.error("Error deleting message:",error);
+    showToast("Could not delete message","error");
+}
+}
+// Initialize socket connection
+function initSocket() {
+    console.log("Initializing socket connection...");
+    
+    socket = io('http://localhost:5003', {
+        withCredentials: true,
+        transports: ['websocket', 'polling']
+    });
+    
+    socket.on('connect', () => {
+        console.log('Socket connected');
+        updateConnectionStatus(true);
+        
+        // Join conversation room
+        if (conversationId) {
+            socket.emit('join_conversation', { conversationId });
+            console.log('Joined conversation room:', conversationId);
+        }
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+        updateConnectionStatus(false);
+    });
+    
+    socket.on('receive_message', (message) => {
+        console.log('Message received via socket:', message);
+        if (message.conversationId === conversationId) {
+            addMessageToChat(message);
+        }
+    });
+    
+    socket.on('user_typing', (data) => {
+        console.log('User typing:', data);
+        if (data.conversationId === conversationId && data.userId !== ownerId) {
+            showTypingIndicator(data.isTyping);
+        }
+    });
+    
+    socket.on('error', (error) => {
+        console.error('Socket error:', error);
+        showToast('Connection error', 'error');
+    });
+}
+
+// Send message
+async function sendMessage() {
+    const msgInput = document.getElementById('msg-input');
+    const content = msgInput.innerText.trim();
+    let image = null;
+     if (selectedFile) {
+    image = await toBase64(selectedFile);
+  }
+    if (!content) {
+        showToast('Message cannot be empty', 'error');
+        return;
+    }
+    
+    if (!socket || !socket.connected) {
+        showToast('Not connected to server', 'error');
+        return;
+    }
+    
+    console.log("Sending message:", content);
+    
+    // Clear input
+    msgInput.innerHTML = '';
+    msgInput.style.height = 'auto';
+    
+    // Create temporary message
+    const tempMsg = {
+        id: 'temp_' + Date.now(),
+        content: content,
+        senderId: ownerId,
+        conversationId: conversationId,
+        createdAt: new Date().toISOString(),
+        temp: true
+    };
+    
+    // Add temporary message to chat
+    const tempElement = renderMessage(tempMsg);
+    tempElement.style.opacity = '0.7';
+    scrollToBottom();
+    
+    try {
+        const senderId = ownerId;
+        console.log("Owner ID for sending message:", senderId);
+        const senderType=role.toUpperCase();
+        // Send via HTTP POST
+        const res = await fetch(`http://localhost:5003/api/messages/messages/sending/${conversationId}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, senderId, senderType, image })
+        });
+        
+        
+        const savedMessage = await res.json();
+        console.log("Message saved:", savedMessage);
+        
+        // Remove temp message and add saved message
+        tempElement.remove();
+        renderMessage(savedMessage);
+        
+        // Emit via socket
+        socket.emit('send_message', {
+            conversationId: conversationId,
+            ...savedMessage
+        });
+        
+        console.log("Message sent via socket");
+        document.getElementById("fileInput").value = "";
+        selectedFile = null;
+        scrollToBottom();
+        
+    } catch (error) {
+        console.error("Error sending message:", error);
+        tempElement.style.opacity = '1';
+        tempElement.querySelector('.bubble').style.background = '#fee';
+        tempElement.querySelector('.bubble').style.color = '#e74c3c';
+        showToast('Failed to send message: ' + error.message, 'error');
+    }
+}
+
+// Add message to chat (for received messages)
+function addMessageToChat(message) {
+    const existingMessages = Array.from(document.querySelectorAll('.message'));
+    const messageExists = existingMessages.some(el => {
+        const bubbleText = el.querySelector('.bubble').textContent;
+        return bubbleText.includes(message.content);
+    });
+    
+    if (!messageExists && message.senderId !== ownerId) {
+        console.log("Adding new message to chat:", message);
+        renderMessage(message);
+        scrollToBottom();
+    }
+}
+
+// Show/hide typing indicator
+function showTypingIndicator(show) {
+    const typingIndicator = document.getElementById('typing-indicator');
+    typingIndicator.style.display = show ? 'flex' : 'none';
+}
+
+// Update connection status
+function updateConnectionStatus(connected) {
+    const statusEl = document.getElementById('connection-status');
+    if (connected) {
+        statusEl.textContent = "Connected";
+        statusEl.classList.remove('disconnected', 'hidden');
+        setTimeout(() => statusEl.classList.add('hidden'), 3000);
+    } else {
+        statusEl.textContent = "Disconnected";
+        statusEl.classList.add('disconnected');
+        statusEl.classList.remove('hidden');
+    }
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    console.log(`Toast [${type}]: ${message}`);
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    toast.style.background = type === 'error' ? 'rgba(239,68,68,0.9)' : 
+                            type === 'success' ? 'rgba(16,185,129,0.9)' : 
+                            'rgba(0,0,0,0.8)';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Scroll to bottom of chat
+function scrollToBottom() {
+    const chatContainer = document.getElementById('chatContainer');
+    setTimeout(() => {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }, 100);
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Event handler functions
+function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+function goBack() {
+    window.history.back();
+}
+
+// Adjust input height when typing
+document.getElementById('msg-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+
+// Initialize chat when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM loaded, initializing chat...");
+    
+    if (!conversationId) {
+        alert("No conversation selected. Redirecting...");
+        window.location.href = '../portal.html';
+        return;
+    }
+    
+    // Start initialization
+    initChat();
+});
+let selectedFile = null;
+
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  selectedFile = e.target.files[0];
+  if (!selectedFile) return;
+
+  const preview = document.getElementById("file-preview");
+  preview.innerHTML = ""; // clear old preview
+  preview.style.display = "flex";
+
+  // If image → show thumbnail
+  if (selectedFile.type.startsWith("image/")) {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(selectedFile);
+    preview.appendChild(img);
+  }
+
+  // File name
+  const name = document.createElement("span");
+  name.textContent = selectedFile.name;
+  preview.appendChild(name);
+
+  // Remove button
+  const remove = document.createElement("span");
+  remove.textContent = "✕";
+  remove.className = "remove-file";
+  remove.onclick = () => {
+    selectedFile = null;
+    document.getElementById("fileInput").value = "";
+    preview.style.display = "none";
+    preview.innerHTML = "";
+  };
+
+  preview.appendChild(remove);
+
+  document.getElementById("send-btn").disabled = false;
+});
+
+</script>
+
+</body>
+</html>

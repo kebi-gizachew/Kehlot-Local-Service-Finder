@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kehlot - Providers & Chat</title>
+<style>
+/* --- 1. ORIGINAL CSS (UNTOUCHED) --- */
+:root { --kihlot-teal: #0F98B3;--kihlot-teal-light: #9edee4;--text-dark: #0f172a;
+--text-gray: #64748b;}body {background: #f8fafc;color: var(--text-dark);
+font-family: 'Inter', sans-serif;margin: 0;}.kehlot-header {background: white;
+border-bottom: 1px solid #eef2f6;padding: 12px 5%;display: flex;
+justify-content: space-between;align-items: center;
+position: sticky;top: 0;z-index: 100;}.header-left { display: flex; align-items: center; cursor: pointer; gap: 10px; }.brand-logo-img { height: 45px; width: auto;
+border-radius: 4px; }.brand-name { font-size: 1.4rem; font-weight: 800; color: var(--kihlot-teal); }.header-right { display: flex; gap: 20px; font-weight: 600; align-items: center;
+}.user-meta, .logout-link, .recent-link { display: flex; align-items: center; gap: 5px; cursor: pointer; }.content-wrapper { max-width: 800px; margin: 0 auto;
+padding: 30px 20px; }.view { display: none; }.view.active { display: block; }
+.category-header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.icon-sq-inline { background: #f1f5f9; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}.title-large { margin: 0; font-size: 1.5rem; font-weight: 800; }.search-box { background: white; border: 1px solid #d1d5db;
+border-radius: 14px; display: flex; align-items: center; padding: 12px 18px; margin-bottom: 25px; max-width: 500px;}.search-icon-svg { color: #64748b; margin-right: 12px; display: flex;
+align-items: center; }
+.search-box input { border: none; outline: none; font-size: 1rem; color: #475569; width: 100%; background: transparent; }.selection-grid { display: grid;
+grid-template-columns: 1fr; gap: 12px; }
+.option-card { background: white; border: 1.5px solid #eef2f6; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; cursor: pointer;
+transition: all 0.25s ease; }
+.option-card:hover { border-color: var(--kihlot-teal-light); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06); transform: translateY(-2px); }.option-card.selected { border-color: var(--kihlot-teal); background: #f0fbfc;
+}.icon-sq { background: #f1f5f9; width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-right: 20px;
+}
+.radio-indicator { margin-left: auto; width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%; }.option-card.selected .radio-indicator { border-color: var(--kihlot-teal);
+background: var(--kihlot-teal); box-shadow: inset 0 0 0 4px white; }.profile-card-full { background: white; border-radius: 24px; overflow: hidden;
+box-shadow: 0 10px 25px rgba(0,0,0,0.05); }.teal-banner-strip { background: var(--kihlot-teal); height: 130px; }.profile-main-area { padding: 0 30px 40px 30px; margin-top: -60px;
+text-align: center; }.floating-avatar { width: 110px; height: 110px; border-radius: 20px; border: 5px solid white; object-fit: cover; background: white;
+}.detail-name { font-size: 1.8rem; font-weight: 800; margin: 15px 0 5px 0; }.rating-row { display: flex; justify-content: center; align-items: center;
+gap: 8px; margin-bottom: 20px; }.stars-gold { color: #f6ad55; font-size: 1.2rem; }.stars-gray { color: #e2e8f0; font-size: 1.2rem; }.modal-overlay { position: fixed;
+top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}.interactive-stars { font-size: 2.8rem; cursor: pointer; color: #cbd5e1; margin-bottom: 20px; display: flex; justify-content: center; gap: 5px; }.btn-rate-open { background: var(--kihlot-teal);
+color: white; border: none; padding: 8px 25px; border-radius: 20px; font-weight: 700; cursor: pointer; margin-bottom: 25px; }
+.btn-modal-submit { background: var(--kihlot-teal); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px;
+}
+.contact-info-box { text-align: left; background: #f8fafc; border-radius: 16px; padding: 20px; margin-bottom: 25px; }.info-item { margin-bottom: 10px; font-size: 0.95rem; display: flex;
+gap: 10px; align-items: center; }.about-box-inline { border-top: 1px solid #e2e8f0; margin-top: 15px; padding-top: 15px; }.about-box-inline h3 { font-size: 1rem;
+font-weight: 800; margin-bottom: 8px; color: var(--text-dark); }.about-box-inline p { font-size: 0.9rem; color: var(--text-gray); line-height: 1.5; margin: 0; }
+.btn-message-large { background: var(--kihlot-teal); color: white; border: none; width: 100%; padding: 18px; border-radius: 16px; font-weight: 700; cursor: pointer; display: flex;
+align-items: center; justify-content: center; gap: 10px; }.nav-back { background: none; border: none; color: var(--text-gray); cursor: pointer; font-weight: 600; margin-bottom: 20px;
+}
+.telegram-chat { background: white; height: 75vh; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #eee;
+}.chat-header { background: var(--kihlot-teal); color: white; padding: 15px; display: flex; align-items: center; gap: 10px; }
+.chat-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; }
+.chat-body { flex: 1; background: #e7ebf0; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.msg-sent { background: #effdde; align-self: flex-end; padding: 10px 15px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; max-width: 75%; display: flex; flex-direction: column; align-items: flex-end; }
+.delete-icon-wrap { cursor: pointer; margin-top: 4px; display: flex; flex-direction: column; align-items: center; color: #64748b; font-size: 10px; }
+.chat-img-msg { max-width: 200px; border-radius: 8px; cursor: pointer; display: block; }
+.chat-footer { padding: 15px; display: flex; background: white; gap: 10px; border-top: 1px solid #eee; align-items: center; }
+.chat-footer input { flex: 1; border: 1px solid #ddd; padding: 12px; border-radius: 12px; outline: none; }
+.send-btn, .attachment-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; }
+.btn-yes-logout { background: #ff4d4d; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 10px;
+}
+.img-popup-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 2000; display:none; align-items:center; justify-content:center; }
+.img-popup-overlay img { max-width: 90%; max-height: 90%; border-radius: 10px; }
+/* Inline confirmation message (from index) */
+.confirmation-msg { max-width: 800px; margin: 12px auto 0 auto; padding: 12px 16px; background: #e6f7ec; color: #1f7a3a; border: 1px solid #b6e2c1; border-radius: 10px; font-weight: 600; display: none; }
+.ui-feedback-banner { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 8px; color: white; font-weight: 600; z-index: 2000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.bg-success { background: #10b981; }
+.bg-error { background: #ef4444; }
+</style>
+</head>
+<body>
+<div id="feedbackBanner" class="ui-feedback-banner"></div>
+<div id="imgPopup" class="img-popup-overlay" onclick="this.style.display='none'"><img id="popupTarget" src=""></div>
+<div id="logoutModal" class="modal-overlay">
+<div class="modal-content">
+<h2>Logout</h2>
+<p style="color:var(--text-gray)">Are you sure you want to exit Kehlot?</p>
+<button class="btn-yes-logout" onclick="logout()">Yes, Exit</button>
+<button style="margin-top:15px; background:none; border:none; color:var(--text-gray); cursor:pointer;" onclick="toggleLogout(false)">Cancel</button>
+</div>
+</div>
+<div id="rateModal" class="modal-overlay">
+<div class="modal-content">
+<h2 style="margin-top:0">Rate Experience</h2>
+<p style="color: var(--text-gray);">How would you rate this provider?</p>
+<div class="interactive-stars" id="rating-stars">
+<span onclick="setRating(1)">☆</span><span onclick="setRating(2)">☆</span><span onclick="setRating(3)">☆</span><span onclick="setRating(4)">☆</span><span onclick="setRating(5)">☆</span>
+</div>
+<button id="submitRatingBtn" class="btn-modal-submit" onclick="submitRating()">Submit Review</button> <button style="margin-top:15px; background:none; border:none; color:var(--text-gray); cursor:pointer;" onclick="toggleModal(false)">Cancel</button>
+</div>
+</div>
+<nav class="kehlot-header">
+<div class="header-left" onclick="showView('listing')">
+<img src="./images/logo.jpg" alt="Kehlot Logo" class="brand-logo-img" onerror="this.style.display='none';">
+<span class="brand-name">Kehlot</span>
+</div>
+<div class="header-right">
+<span class="user-meta">
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+<span id="header-username">user</span>
+</span>
+<span class="recent-link" onclick="handleRecentChats()">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+</span>
+<span class="logout-link" onclick="toggleLogout(true)">
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+Logout
+</span>
+</div>
+</nav>
+<div id="confirmationMsg" class="confirmation-msg"></div>
+<main class="content-wrapper">
+<section id="view-listing" class="view active">
+<button class="nav-back" onclick="location.href='../categories.html'">← Back to Categories</button>
+</section>
+<section id="view-details" class="view">
+<button class="nav-back" onclick="showView('listing')">← Back to List</button>
+<div class="profile-card-full">
+<div class="teal-banner-strip"></div>
+<div class="profile-main-area">
+<img id="p-img" src="" class="floating-avatar">
+<h2 class="detail-name" id="p-name">---</h2>
+<div class="rating-row">
+<span class="stars-gold" id="star-row-detail">★★★★☆</span>
+<span style="color:var(--text-gray); font-size:0.9rem" id="p-reviews">0 reviews</span>
+</div>
+<button class="btn-rate-open" onclick="toggleModal(true)">Rate Provider</button>
+<div class="contact-info-box">
+  
+  <div class="info-item"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span id="p-loc">---</span></div>
+  <div class="info-item"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span id="p-phone">---</span></div>
+  <div class="info-item"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span id="p-email">---</span></div>
+  <div class="about-box-inline"><h3>Bio</h3><p id="p-bio">---</p></div>
+</div>
+<button id="message-btn" class="btn-message-large" onclick="handleMessageBtn()">
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+<span id="message-btn-text">Send Message</span>
+</button>
+</div>
+</div>
+</section>
+
+<section id="view-recent-messages" class="view">
+<button class="nav-back" onclick="showView('listing')">← Back</button>
+<h1 class="main-heading">Recent Messages</h1>
+<div id="recent" class="selection-grid">
+  <p style="text-align:center; color:var(--text-gray); padding:20px;">There is no recent message.</p>
+</div>
+</section>
+
+</main>
+<script>
+/* --- APP STATE --- */
+const AppState = {
+    currentUser: { id: 1, name: "user", role: "customer" },
+    selectedCategory: { name: "", icon: "" },
+    currentProvider: null,
+    chatHistory: [], // Structure: {providerId, messages[]} 
+    userRating: 0,
+    isProcessing: false // ADDED: Global lock for async operations
+};
+
+/* --- API SERVICE CONTRACTS (MOCK) --- */
+const API = {
+    async fetchProviders(filters) {
+        await new Promise(r => setTimeout(r, 400));
+        let data = providerDatabase;
+        if (filters.skill) data = data.filter(p => p.skill === filters.skill);
+        if (filters.search) {
+            const s = filters.search.toLowerCase();
+            // Search by location only
+            data = data.filter(p => p.loc.toLowerCase().includes(s));
+        }
+        return { success: true, data };
+    },
+
+    async submitReview(payload) {
+        // FIXED: Explicit payload validation
+        if (!payload.providerId || !payload.stars || payload.stars < 1) {
+            throw new Error("Invalid review data: Stars required.");
+        }
+        await new Promise(r => setTimeout(r, 600));
+        return { 
+            success: true, 
+            message: "Review submitted successfully.",
+            newAverage: Math.min(5, payload.stars),
+            newTotal: 1
+        };
+    },
+
+    async postMessage(payload) {
+        // FIXED: Context and Content validation
+        if (!payload.providerId || !payload.content) {
+            throw new Error("Message failed: Recipient or content missing.");
+        }
+        await new Promise(r => setTimeout(r, 300));
+        
+        // Save message to localStorage
+        const messageData = { 
+            ...payload, 
+            id: Date.now(), 
+            timestamp: new Date().toISOString(),
+            senderId: AppState.currentUser.id,
+            type: 'text'
+        };
+        
+        const chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+        chatHistory.push(messageData);
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        
+        return { 
+            success: true, 
+            data: messageData 
+        };
+    },
+
+    async deleteMessage(id) {
+        await new Promise(r => setTimeout(r, 200));
+        return { success: true };
+    }
+};
+
+/* --- MOCK DATABASE --- */
+let providerDatabase = [];
+
+async function settingData(){
+    providerDatabase = await getProviderData();
+    console.log('Provider database loaded:', providerDatabase.length);
+}
+
+settingData();
+
+async function forProviders() {
+    try {
+        const response = await fetch("http://localhost:5003/api/provider");
+        
+        if (!response.ok) {
+            console.error('Failed to fetch providers:', response.status);
+            return [];
+        }
+        
+        const tempo = await response.json();
+       
+        return tempo;
+        
+    } catch (error) {
+        console.error('Error fetching providers:', error);
+        return [];
+    }
+}
+
+// You need to await the function first
+async function getProviderData() {
+    const tempo = await forProviders();
+ 
+    const setOfSkills = [
+        {
+            id: "f3462f6e-2ea8-401e-b968-1a4737b2c512",
+            name: "Carpentry"
+        },
+        {
+            id: "d4a9dd93-49c1-4df8-a5da-b85614d66b2b",
+            name: "Cleaning"
+        },
+        {
+            id: "5ccd7d23-2162-4e26-975a-7a7b20a0f329",  // Note: This ID seems incomplete
+            name: "Electrical"
+        },
+        {
+            id: "0667df3f-be52-49f3-b1f9-12819481e8a8",
+            name: "Mechanics"
+        },
+        {
+            id: "13cdb8de-b972-42d2-860f-f37cf6bbf36b",
+            name: "Painting"
+        },
+        {
+            id: "d3493521-650e-4a22-b75e-7146c1ecb77f",
+            name: "Plumbing"
+        }
+    ];
+    
+    // Transform the data
+    const providerData = tempo.map(provider => {
+        // Find the skill name based on categoryId
+        const skillObj = setOfSkills.find(skill => skill.id === provider.categoryId);
+        const skillName = skillObj ? skillObj.name : "Unknown";
+        
+        return {
+            id: provider.id,
+            name: provider.name,
+            skill: skillName,
+            loc: provider.location,
+            phone: provider.phoneNumber,
+            email: provider.email,
+            img: provider.profileImage,  // Note: Changed from profileImg to profileImage
+            bio: provider.bio,
+            reviews: provider.totalRatings,
+            stars: provider.averageRating  
+        };
+    });
+    console.log(providerData);
+    return providerData;
+}
+
+/* --- CORE FUNCTIONS --- */
+function notify(msg, type='success') {
+    const b = document.getElementById('feedbackBanner');
+    b.innerText = msg;
+    b.className = `ui-feedback-banner bg-${type}`;
+    b.style.display = 'block';
+    setTimeout(() => b.style.display = 'none', 3000);
+}
+
+function showConfirmation(message) {
+    const box = document.getElementById('confirmationMsg');
+    if(!box) return;
+    box.textContent = message;
+    box.style.display = 'block';
+    setTimeout(() => { box.style.display = 'none'; }, 3000);
+}
+
+function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById(`view-${id}`);
+    if(target) target.classList.add('active');
+    if (id === 'listing') initializeCategoryView();
+}
+
+/* --- URL PARAMETER HANDLING --- */
+const params = new URLSearchParams(window.location.search);
+const category = params.get('cat');
+let filters = params.get('filters') ? params.get('filters').split(',') : [];
+console.log(filters);
+
+function getIconForSkill(skill) {
+    const map = {
+        'Plumbing': '🔧',
+        'Electrical': '⚡', 
+        'Cleaning': '🧹',
+        'Carpentry': '🔲',
+        'Painting': '🎨',
+        'Mechanics': '⚙️'
+    };
+    return map[skill] || '📋';
+}
+
+async function initializeCategoryView() {
+    // Wait for providerDatabase to be loaded if it's still empty
+    if (!providerDatabase || providerDatabase.length === 0) {
+        console.log('Waiting for provider database to load...');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Try to load it again if still not loaded
+        if (!providerDatabase || providerDatabase.length === 0) {
+            console.log('Loading provider database in initializeCategoryView...');
+            await settingData();
+        }
+    }
+    
+    const container = document.getElementById('view-listing');
+    if (!container) return;
+    
+    // Clear existing content except the back button
+    const backButton = container.querySelector('.nav-back');
+    container.innerHTML = '';
+    if (backButton) {
+        container.appendChild(backButton);
+    }
+    
+    // If we have filters, show each category section
+    if (filters.length > 0) {
+        // Show each filtered category in its own section
+        filters.forEach((skill) => {
+            // Get all workers for this skill
+            const workers = providerDatabase.filter(p => p.skill.toLowerCase() === skill.toLowerCase());
+            const icon = getIconForSkill(skill);
+            
+            const categorySection = document.createElement('div');
+            categorySection.className = 'category-section';
+            categorySection.id = `category-${skill.toLowerCase()}`;
+            categorySection.style.marginBottom = '40px';
+            
+            categorySection.innerHTML = `
+                <div class="category-header-row">
+                    <div class="icon-sq-inline">${icon}</div>
+                    <div>
+                        <h1 class="title-large">${skill} Providers</h1>
+                        <p style="margin:2px 0 0 0; color:var(--text-gray); font-size:0.9rem">
+                            ${workers.length} ${skill.toLowerCase()} workers available
+                        </p>
+                    </div>
+                </div>
+                <div class="search-box">
+                    <div class="search-icon-svg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
+                    <input type="text" placeholder="Search ${skill} workers by location..." 
+                           id="searchField-${skill}" 
+                           data-skill="${skill}"
+                           oninput="filterProviders('${skill}')">
+                </div>
+                <div class="selection-grid" id="provider-list-${skill}"></div>
+            `;
+            
+            container.appendChild(categorySection);
+            
+            // Render ALL workers for this skill initially
+            renderProvidersBySkill(skill, workers);
+        });
+    } else if (category) {
+        // Fallback: single category mode
+        const workers = providerDatabase.filter(p => p.skill === category);
+        const icon = getIconForSkill(category);
+        
+        const categorySection = document.createElement('div');
+        categorySection.className = 'category-section';
+        
+        categorySection.innerHTML = `
+            <div class="category-header-row">
+                <div class="icon-sq-inline" id="cat-icon-small">${icon}</div>
+                <div>
+                    <h1 class="title-large" id="cat-title">${category} Providers</h1>
+                    <p style="margin:2px 0 0 0; color:var(--text-gray); font-size:0.9rem" id="cat-count">${workers.length} ${category.toLowerCase()} workers available</p>
+                </div>
+            </div>
+            <div class="search-box">
+                <div class="search-icon-svg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <input type="text" placeholder="Search ${category} workers by location..." id="searchField" oninput="filterAllProviders()">
+            </div>
+            <div class="selection-grid" id="provider-list"></div>
+        `;
+        
+        container.appendChild(categorySection);
+        AppState.selectedCategory.name = category;
+        AppState.selectedCategory.icon = icon;
+        renderProvidersBySkill(category, workers);
+    } else {
+        // Show all providers
+        const categorySection = document.createElement('div');
+        categorySection.className = 'category-section';
+        
+        categorySection.innerHTML = `
+            <div class="category-header-row">
+                <div class="icon-sq-inline" id="cat-icon-small">📋</div>
+                <div>
+                    <h1 class="title-large" id="cat-title">All Providers</h1>
+                    <p style="margin:2px 0 0 0; color:var(--text-gray); font-size:0.9rem" id="cat-count">${providerDatabase.length} workers available</p>
+                </div>
+            </div>
+            <div class="search-box">
+                <div class="search-icon-svg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <input type="text" placeholder="Search workers by location..." id="searchField" oninput="filterAllProviders()">
+            </div>
+            <div class="selection-grid" id="provider-list"></div>
+        `;
+        
+        container.appendChild(categorySection);
+        AppState.selectedCategory.name = "All";
+        AppState.selectedCategory.icon = "📋";
+        renderAllProviders();
+    }
+}
+
+/* --- PROVIDER RENDERING FUNCTIONS --- */
+function renderProvidersBySkill(skill, workers) {
+    const listId = filters.length > 0 ? `provider-list-${skill}` : 'provider-list';
+    const container = document.getElementById(listId);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (workers.length === 0) {
+        container.innerHTML = `
+            <p style="grid-column:1/-1; text-align:center; color:#64748b; padding:20px;">
+                No ${skill} workers found.
+            </p>
+        `;
+        return;
+    }
+    
+    workers.forEach(p => {
+        const providerCard = createProviderCard(p);
+        container.appendChild(providerCard);
+    });
+}
+
+function renderAllProviders() {
+    const container = document.getElementById('provider-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (providerDatabase.length === 0) {
+        container.innerHTML = `
+            <p style="grid-column:1/-1; text-align:center; color:#64748b; padding:20px;">
+                No workers found.
+            </p>
+        `;
+        return;
+    }
+    
+    providerDatabase.forEach(p => {
+        const providerCard = createProviderCard(p);
+        container.appendChild(providerCard);
+    });
+}
+
+function createProviderCard(p) {
+    const goldStars = "★".repeat(Math.round(p.stars));
+    const grayStars = "★".repeat(5 - Math.round(p.stars));
+    const imgSrc = (p.img && (p.img.startsWith('http') || p.img.includes('/'))) ? p.img : 'pic/' + p.img;
+    const image=p.img || null
+    const providerCard = document.createElement('div');
+    providerCard.className = 'option-card';
+    providerCard.dataset.providerId = p.id;
+    providerCard.setAttribute('tabindex', '0');
+    const firstLetter = p.name?.charAt(0).toUpperCase() || "?";
+    providerCard.innerHTML = `
+        <div id="provider-${p.id}" 
+             style="position: relative; cursor: pointer; width: 100%; height: 100%;">
+            <div style="display: flex; align-items: center;">
+             ${image
+  ? `<img src="${imgSrc}"
+           style="width:50px; height:50px; border-radius:10px; margin-right:15px; object-fit:cover;">`
+  : `<div style="
+        width:50px;
+        height:50px;
+        border-radius:10px;
+        margin-right:15px;
+        background:#0F98B3;
+        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-weight:bold;
+        font-size:1.2rem;
+      ">
+        ${firstLetter}
+     </div>`}
+                <div class="option-info">
+                    <p class="text-bold" style="margin:0">${p.name}</p>
+                    <p class="text-muted loc-data" style="margin:3px 0 0 0; display:flex; align-items:center; gap:6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="2">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        ${p.loc}
+                    </p>
+                    <p class="text-muted" style="margin:3px 0 0 0; font-size:0.8rem; color:#0F98B3;">
+                        ${p.skill}
+                    </p>
+                </div>
+                <div style="margin-left:auto; text-align: right;">
+                    <div style="font-size: 0.9rem;">
+                        <span style="color:#f6ad55;">${goldStars}</span>
+                        <span style="color:#e2e8f0;">${grayStars}</span>
+                    </div>
+                    <span style="font-size: 0.8rem; color: #64748b;">(${p.reviews} reviews)</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    providerCard.onclick = () => {
+        handleProviderCardClick(p.id);
+    };
+    
+    return providerCard;
+}
+
+function populateDetails(p) {
+    document.getElementById('p-img').src = p.img;
+    document.getElementById('p-name').textContent = p.name;
+    document.getElementById('star-row-detail').textContent = "★".repeat(Math.round(p.stars)) + "☆".repeat(5 - Math.round(p.stars));
+    document.getElementById('p-reviews').textContent = `${p.reviews} reviews`;
+    document.getElementById('p-loc').textContent = p.loc;
+    document.getElementById('p-phone').textContent = p.phone;
+    document.getElementById('p-email').textContent = p.email;
+    document.getElementById('p-bio').textContent = p.bio;
+    
+    // Check if there are messages with this provider
+    const chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+    const hasMessages = chatHistory.some(m => m.providerId == p.id);
+    
+    const btnText = document.getElementById('message-btn-text');
+    btnText.textContent = hasMessages ? 'View Messages' : 'Send Message';
+}
+
+/* --- FILTERING FUNCTIONS --- */
+function filterProviders(skill) {
+    const searchField = document.getElementById(`searchField-${skill}`);
+    const container = document.getElementById(`provider-list-${skill}`);
+    
+    if (!searchField || !container) return;
+    
+    const searchTerm = searchField.value.toLowerCase();
+    
+    // Get all workers for this skill
+    let workers = providerDatabase.filter(p => p.skill === skill);
+    
+    // Filter by location if search term exists
+    if (searchTerm) {
+        workers = workers.filter(p => p.loc.toLowerCase().includes(searchTerm));
+    }
+    
+    // Clear and re-render
+    container.innerHTML = '';
+    
+    if (workers.length === 0) {
+        container.innerHTML = `
+            <p style="grid-column:1/-1; text-align:center; color:#64748b; padding:20px;">
+                No ${skill} workers found in "${searchTerm}"
+            </p>
+        `;
+        return;
+    }
+    
+    workers.forEach(p => {
+        const providerCard = createProviderCard(p);
+        container.appendChild(providerCard);
+    });
+}
+
+function filterAllProviders() {
+    const searchField = document.getElementById('searchField');
+    const container = document.getElementById('provider-list');
+    
+    if (!searchField || !container) return;
+    
+    const searchTerm = searchField.value.toLowerCase();
+    let workers = providerDatabase;
+    
+    if (searchTerm) {
+        workers = workers.filter(p => p.loc.toLowerCase().includes(searchTerm));
+    }
+    
+    container.innerHTML = '';
+    
+    if (workers.length === 0) {
+        container.innerHTML = `
+            <p style="grid-column:1/-1; text-align:center; color:#64748b; padding:20px;">
+                No workers found in "${searchTerm}"
+            </p>
+        `;
+        return;
+    }
+    
+    workers.forEach(p => {
+        const providerCard = createProviderCard(p);
+        container.appendChild(providerCard);
+    });
+}
+
+/* --- PROVIDER DETAILS FUNCTIONS --- */
+function openProviderDetailsById(id) {
+    const prov = providerDatabase.find(p => p.id === parseInt(id, 10));
+    if (!prov) {
+        return notify("Provider not found.", "error");
+    }
+    AppState.currentProvider = prov;
+    populateDetails(prov);
+    showView('details');
+}
+
+function populateDetails(p){ 
+    if(!p) return;
+    const imgSrc = (p.img && (p.img.startsWith('http') || p.img.includes('/'))) ? p.img : 'pic/' + p.img;
+    const imgEl = document.getElementById('p-img');
+    if (imgEl) imgEl.src = imgSrc; 
+    const nameEl = document.getElementById('p-name'); if (nameEl) nameEl.innerText = p.name; 
+    
+    document.getElementById('p-loc').innerText = p.loc; 
+    document.getElementById('p-phone').innerText = p.phone; 
+    document.getElementById('p-email').innerText = p.email; 
+    document.getElementById('p-bio').innerText = p.bio; 
+    const starRow = document.getElementById('star-row-detail'); if (starRow) starRow.innerText = '★'.repeat(p.stars) + '☆'.repeat(5-p.stars); 
+    const revEl = document.getElementById('p-reviews'); if (revEl) revEl.innerText = p.reviews + ' reviews'; 
+}
+
+/* --- RATING LOGIC --- */
+function toggleModal(show) { 
+    if(show && !AppState.currentProvider) {
+        return notify("No provider selected to rate.", "error");
+    }
+    if(show) setRating(0); 
+    document.getElementById('rateModal').style.display = show ? 'flex' : 'none'; 
+}
+
+function setRating(s){ 
+    AppState.userRating = s; 
+    Array.from(document.getElementById('rating-stars').children).forEach((el,i)=> { 
+        el.innerText = i < s ? '★' : '☆'; 
+        el.style.color = i < s ? '#f6ad55' : '#cbd5e1'; 
+    }); 
+}
+
+async function submitRating(){
+    if(AppState.isProcessing) return;
+    if(!AppState.currentProvider) return notify("Provider session lost. Reloading...", "error");
+    if(AppState.userRating === 0) return notify("Please select a star rating.", "error");
+    
+    AppState.isProcessing = true;
+    const btn = document.getElementById('submitRatingBtn');
+    btn.innerText = "Submitting...";
+
+    try {
+        const res = await API.submitReview({ 
+            providerId: AppState.currentProvider.id, 
+            userId: AppState.currentUser.id, 
+            stars: AppState.userRating 
+        });
+        if(res.success) {
+            // Compute accurate aggregated rating and update counts
+            const oldAvg = AppState.currentProvider.stars || 0;
+            const oldCount = AppState.currentProvider.reviews || 0;
+            const newTotal = oldCount + 1;
+            const preciseAvg = ((oldAvg * oldCount) + AppState.userRating) / newTotal;
+            const roundedAvg = Math.round(preciseAvg);
+
+            AppState.currentProvider.reviews = newTotal;
+            AppState.currentProvider.stars = roundedAvg;
+
+            const idx = providerDatabase.findIndex(p => p.id === AppState.currentProvider.id);
+            if (idx !== -1) {
+                providerDatabase[idx].reviews = newTotal;
+                providerDatabase[idx].stars = roundedAvg;
+            }
+
+            populateDetails(AppState.currentProvider);
+            showConfirmation("Successfully submitted. Thank you for rating.");
+            initializeCategoryView(); // Refresh the list
+            toggleModal(false);
+        }
+    } catch(e) { notify(e.message || "Submission failed.", "error"); }
+    finally { 
+        AppState.isProcessing = false; 
+        btn.innerText = "Submit Review"; 
+    }
+}
+
+/* --- CHAT LOGIC --- */
+async function openChat() {
+    if(!AppState.currentProvider) return notify("Please select a provider first.", "error");
+    
+    // Store provider and user data in localStorage for chat.html
+    localStorage.setItem('selectedProvider', JSON.stringify(AppState.currentProvider));
+    localStorage.setItem('currentUser', JSON.stringify(AppState.currentUser));
+    
+    // Redirect to chat page
+    window.location.href = 'chat.html';
+}
+
+function handleMessageBtn() {
+    const btnText = document.getElementById('message-btn-text').textContent;
+    if (btnText === 'Send Message') {
+        openChat();
+    } else {
+        showProviderMessages();
+    }
+}
+async function updateChat() {
+    try {
+        console.log("update")
+        const convoResponse = await fetch(`http://localhost:5003/api/messages/conversation/user`);
+        const realTime = await convoResponse.json();
+        console.log(realTime);
+
+        const recent = document.getElementById('recent');
+        if (!recent) return;
+
+        recent.innerHTML = '';
+
+        if (!realTime || !Array.isArray(realTime) || realTime.length === 0) {
+            recent.innerHTML = `<p style="text-align:center; color:var(--text-gray); padding:20px;">There is no recent message.</p>`;
+            return;
+        }
+
+        for (const convo of realTime) {
+            const provider = convo.provider; // <-- use the included provider
+            if (!provider) continue; // skip if provider missing
+
+            const msgCard = document.createElement('div');
+            msgCard.className = 'option-card';
+            msgCard.style.cursor = 'pointer';
+            msgCard.onclick = () => {
+                if (window.AppState) window.AppState.currentProvider = provider;
+                window.location.href = './chat.html?conversationId=' + convo.id;
+            };
+
+            const isNew = convo.timestamp && new Date(convo.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const previewText = 'New message';
+
+            msgCard.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${provider.profileImage || '../pic/default-avatar.png'}" 
+                         style="width:40px; height:40px; border-radius:50%; object-fit:cover;" 
+                         onerror="this.src='../pic/default-avatar.png'">
+                    <div style="flex:1;">
+                        <div style="font-weight:600; color:var(--text-dark); display:flex; justify-content:space-between; align-items:center;">
+                            <span>${provider.name || 'Provider'}</span>
+                            ${isNew ? '<span style="background:var(--kihlot-teal); color:white; font-size:0.7rem; font-weight:600; padding:2px 6px; border-radius:10px;">New</span>' : ''}
+                        </div>
+                        <div style="color:var(--text-gray); font-size:0.95rem;">${previewText}</div>
+                    </div>
+                </div>
+            `;
+
+            recent.appendChild(msgCard);
+        }
+
+    } catch (err) {
+        console.error('Error updating chat:', err);
+    }
+}
+
+async function handleRecentChats() {
+    try {
+        await updateChat();
+        showView('recent-messages');
+    } catch (err) {
+        console.error('Error handling recent chats:', err);
+    }
+}
+
+function showProviderMessages() {
+    if(!AppState.currentProvider) return notify("Please select a provider first.", "error");
+    
+    // Populate recent messages for this provider
+    populateRecentMessagesForProvider(AppState.currentProvider.id);
+    
+    // Show the recent messages view
+    showView('view-recent-messages');
+}
+
+function populateAllRecentMessages() {
+    const container = document.getElementById('recent-list');
+    if (!container) return;
+    
+    // Clear existing content
+    container.innerHTML = '';
+    
+    // Get all messages from localStorage
+    const chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+    
+    if (chatHistory.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:var(--text-gray); padding:20px;">No messages yet.</p>';
+        return;
+    }
+    
+    // Group messages by providerId
+    const messagesByProvider = {};
+    chatHistory.forEach(msg => {
+        if (!messagesByProvider[msg.providerId]) {
+            messagesByProvider[msg.providerId] = [];
+        }
+        messagesByProvider[msg.providerId].push(msg);
+    });
+    
+    // For each provider, show the most recent message
+    Object.keys(messagesByProvider).forEach(providerId => {
+        const providerMessages = messagesByProvider[providerId];
+        const provider = providerDatabase.find(p => p.id == providerId);
+        if (!provider) return;
+        
+        // Sort by timestamp, get latest
+        providerMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const latestMsg = providerMessages[0];
+        
+        const msgCard = document.createElement('div');
+        msgCard.className = 'option-card';
+        msgCard.style.cursor = 'pointer';
+        msgCard.onclick = () => {
+            // Set current provider and open chat
+            AppState.currentProvider = provider;
+            openChat();
+        };
+        
+        const isNew = new Date(latestMsg.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000); // Last 24 hours
+        // Always display generic label under sender name
+        const previewText = 'New message';
+        
+        msgCard.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${provider.img}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" onerror="this.src='../pic/default-avatar.png'">
+                <div style="flex:1;">
+                    <div style="font-weight:600; color:var(--text-dark); display:flex; justify-content:space-between; align-items:center;">
+                        <span>${provider.name}</span>
+                        ${isNew ? '<span style="background:var(--kihlot-teal); color:white; font-size:0.7rem; font-weight:600; padding:2px 6px; border-radius:10px;">New</span>' : ''}
+                    </div>
+                    <div style="color:var(--text-gray); font-size:0.95rem;">${previewText}</div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(msgCard);
+    });
+}
+
+// Global delegation: allow clicking any .option-card
+document.addEventListener('click', function (e) {
+    const card = e.target.closest && e.target.closest('.option-card');
+    if (!card) return;
+    const pid = card.dataset && card.dataset.providerId;
+    if (pid) openProviderDetailsById(pid);
+});
+
+// Keyboard activation for focused cards
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        const el = document.activeElement;
+        if (el && el.classList && el.classList.contains('.option-card')) {
+            const pid = el.dataset && el.dataset.providerId;
+            if (pid) {
+                openProviderDetailsById(pid);
+                e.preventDefault();
+            }
+        }
+    }
+});
+
+function openImgPopup(src) { 
+    document.getElementById('popupTarget').src = src; 
+    document.getElementById('imgPopup').style.display = 'flex';
+}
+
+function toggleLogout(show) { 
+    document.getElementById('logoutModal').style.display = show ? 'flex' : 'none'; 
+}
+function handleProviderCardClick(providerId) {
+    window.location.href = `provider-details.html?id=${providerId}`;
+}
+function logout() { 
+    localStorage.removeItem('seekerLoggedIn'); 
+    window.location.href='../homepage.html'; 
+}
+
+/* --- INITIALIZATION --- */
+window.onload = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const open = urlParams.get('open');
+    const providerId = urlParams.get('provider');
+    
+    // Make sure providerDatabase is loaded before doing anything
+    if (!providerDatabase || providerDatabase.length === 0) {
+        console.log('Loading provider database on window load...');
+        await settingData();
+    }
+    
+    if (open === 'recent') { 
+        populateAllRecentMessages();
+        showView('recent-messages'); 
+        return; 
+    }
+    
+    if (open === 'chat' && providerId) {
+        const provider = providerDatabase.find(p => p.id == providerId);
+        if (provider) {
+            AppState.currentProvider = provider;
+            openChat();
+            return;
+        }
+    }
+    
+    document.getElementById('header-username').innerText = AppState.currentUser.name;
+    
+    // Initialize view based on URL parameters
+    await initializeCategoryView();
+    showView('listing');
+};
+</script>
+</body>
+</html>

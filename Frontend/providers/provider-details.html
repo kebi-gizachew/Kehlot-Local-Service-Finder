@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Details - Kehlot</title>
+    <style>
+        :root { 
+            --kihlot-teal: #0F98B3; 
+            --kihlot-teal-light: #9edee4; 
+            --text-dark: #0f172a;
+            --text-gray: #64748b;
+        }
+        
+        body { 
+            background: #f8fafc; 
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+        }
+        
+        .kehlot-header { 
+            background: white;
+            border-bottom: 1px solid #eef2f6; 
+            padding: 12px 5%; 
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+        }
+        
+        .header-left { 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer; 
+            gap: 10px; 
+        }
+        
+        .brand-name { 
+            font-size: 1.4rem; 
+            font-weight: 800; 
+            color: var(--kihlot-teal); 
+        }
+        
+        .header-right { 
+            display: flex; 
+            gap: 20px; 
+            font-weight: 600; 
+            align-items: center;
+        }
+        
+        .content-wrapper { 
+            max-width: 800px; 
+            margin: 0 auto;
+            padding: 30px 20px; 
+        }
+        
+        .profile-card-full { 
+            background: white; 
+            border-radius: 24px; 
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+        }
+        
+        .teal-banner-strip { 
+            background: var(--kihlot-teal); 
+            height: 130px; 
+        }
+        
+        .profile-main-area { 
+            padding: 0 30px 40px 30px; 
+            margin-top: -60px;
+            text-align: center; 
+        }
+        
+        .floating-avatar { 
+            width: 110px; 
+            height: 110px; 
+            border-radius: 20px; 
+            border: 5px solid white; 
+            object-fit: cover; 
+            background: white;
+        }
+        
+        .detail-name { 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            margin: 15px 0 5px 0; 
+        }
+        
+        .rating-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            gap: 8px; 
+            margin-bottom: 20px; 
+        }
+        
+        .stars-gold { 
+            color: #f6ad55; 
+            font-size: 1.2rem; 
+        }
+        
+        .stars-gray { 
+            color: #e2e8f0; 
+            font-size: 1.2rem; 
+        }
+        
+        .contact-info-box { 
+            text-align: left; 
+            background: #f8fafc; 
+            border-radius: 16px; 
+            padding: 20px; 
+            margin-bottom: 25px; 
+        }
+        
+        .info-item { 
+            margin-bottom: 10px; 
+            font-size: 0.95rem; 
+            display: flex;
+            gap: 10px; 
+            align-items: center; 
+        }
+        
+        .about-box-inline { 
+            border-top: 1px solid #e2e8f0; 
+            margin-top: 15px; 
+            padding-top: 15px; 
+        }
+        
+        .about-box-inline h3 { 
+            font-size: 1rem;
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            color: var(--text-dark); 
+        }
+        
+        .about-box-inline p { 
+            font-size: 0.9rem; 
+            color: var(--text-gray); 
+            line-height: 1.5; 
+            margin: 0; 
+        }
+        
+        .btn-message-large { 
+            background: var(--kihlot-teal); 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 18px; 
+            border-radius: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+        
+        .btn-rate-open {
+            background: var(--kihlot-teal);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .btn-rate-open:hover {
+            background: #0d87a0;
+        }
+        
+        .nav-back { 
+            background: none; 
+            border: none; 
+            color: var(--text-gray); 
+            cursor: pointer; 
+            font-weight: 600; 
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--kihlot-teal);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-body p {
+            margin: 0 0 20px 0;
+            color: #555;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        /* Star Rating */
+        .star-rating {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .stars-container {
+            display: inline-block;
+            font-size: 2.5rem;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .star {
+            color: #ddd;
+            transition: color 0.2s;
+            margin: 0 5px;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #ffc107;
+        }
+
+        .rating-text {
+            color: #666;
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+
+        /* Comment Section */
+        .comment-section {
+            margin-top: 20px;
+        }
+
+        .comment-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .comment-section textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .comment-section textarea:focus {
+            outline: none;
+            border-color: #0F98B3;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px 24px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-cancel {
+            padding: 10px 20px;
+            background-color: #f5f5f5;
+            color: #666;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .btn-cancel:hover {
+            background-color: #e9e9e9;
+        }
+
+        .btn-submit {
+            padding: 10px 24px;
+            background-color: #0F98B3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .btn-submit:hover {
+            background-color: #0d87a0;
+        }
+
+        .btn-submit:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .floating-avatar-letter {
+            margin: auto;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0F98B3, #1fbccf);
+    color: #fff;
+    font-size: 48px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -60px; /* match floating avatar position */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+}
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="kehlot-header">
+        <div class="header-left" onclick="window.location.href='providers.html'">
+            <span class="brand-name">Kehlot</span>
+        </div>
+        <div class="header-right">
+            <button class="nav-back" onclick="window.location.href='providers.html'">← Back to Providers</button>
+        </div>
+    </nav>
+    
+    <main class="content-wrapper">
+        <div id="profile-container">
+            <!-- Profile will be loaded here dynamically -->
+            <div style="text-align: center; padding: 50px;">
+                <div class="loading-spinner"></div>
+                <p>Loading provider profile...</p>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Rating Modal -->
+    <div id="ratingModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Rate Experience</h2>
+                <button class="modal-close" onclick="toggleModal(false)">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <p>How would you rate this provider?</p>
+                
+                <div class="star-rating">
+                    <div class="stars-container">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                    <div class="rating-text">Select rating</div>
+                </div>
+
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="toggleModal(false)">Cancel</button>
+                <button class="btn-submit" onclick="submitRating()">Submit Review</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let currentRating = 0;
+        let currentProviderId = null;
+        let currentProviderData = null;
+
+        // Get provider ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const providerId = urlParams.get('id');
+
+        // Function to fetch provider data by ID
+        async function fetchProviderById(providerId) {
+            try {
+                const response = await fetch(`http://localhost:5003/api/provider/profile/${providerId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch provider: ${response.status}`);
+                }
+                
+                const provider = await response.json();
+                return provider;
+            } catch (error) {
+                console.error('Error fetching provider:', error);
+                return null;
+            }
+        }
+
+        // Function to get skill name from categoryId
+        function getSkillName(categoryId) {
+            const skillMap = {
+                "f3462f6e-2ea8-401e-b968-1a4737b2c512": "Carpentry",
+                "d4a9dd93-49c1-4df8-a5da-b85614d66b2b": "Cleaning",
+                "5ccd7d23-2162-4e26-975a-7a7b20a0f329": "Electrical",
+                "0667df3f-be52-49f3-b1f9-12819481e8a8": "Mechanics",
+                "13cdb8de-b972-42d2-860f-f37cf6bbf36b": "Painting",
+                "d3493521-650e-4a22-b75e-7146c1ecb77f": "Plumbing"
+            };
+            
+            return skillMap[categoryId] || "Unknown Skill";
+        }
+
+        // Function to render provider profile
+        function renderProviderProfile(provider) {
+            const container = document.getElementById('profile-container');
+            
+            if (!provider) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 50px;">
+                        <h2>Provider Not Found</h2>
+                        <p>Sorry, we couldn't find this provider.</p>
+                        <button onclick="window.location.href='providers.html'" style="padding: 10px 20px; background: var(--kihlot-teal); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            Back to Providers
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Store provider data globally
+            currentProviderData = provider;
+            
+            const goldStars = "★".repeat(Math.round(provider.averageRating || 0));
+            const grayStars = "★".repeat(5 - Math.round(provider.averageRating || 0));
+            const imgSrc = provider.profileImage || null;
+            const skillName = getSkillName(provider.categoryId);
+            const firstLetter = provider.name ? provider.name.charAt(0).toUpperCase() : '?';
+            container.innerHTML = `
+                <div class="profile-card-full">
+                    <div class="teal-banner-strip"></div>
+                    <div class="profile-main-area">
+                        ${
+    imgSrc
+    ? `
+        <img src="${imgSrc}"
+             class="floating-avatar"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      `
+    : `
+        <div class="floating-avatar-letter">
+            ${firstLetter}
+        </div>
+      `
+}
+
+                        <h2 class="detail-name">${provider.name}</h2>
+                        <div class="rating-row">
+                            <span class="stars-gold">${goldStars}</span>
+                            <span class="stars-gray">${grayStars}</span>
+                            <span style="color:var(--text-gray); font-size:0.9rem">${provider.totalRatings || 0} reviews</span>
+                            <button class="btn-rate-open" onclick="openRatingModal('${provider.id}')">Rate Provider</button>
+                        </div>
+                        
+                        <p style="color: var(--kihlot-teal); font-weight: 600; margin-bottom: 20px;">${skillName}</p>
+                        
+                        <div class="contact-info-box">
+                            <div class="info-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span>${provider.location || 'Not specified'}</span>
+                            </div>
+                            <div class="info-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                </svg>
+                                <span>${provider.phoneNumber || 'Not available'}</span>
+                            </div>
+                            <div class="info-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F98B3" stroke-width="1.5">
+                                    <rect width="20" height="16" x="2" y="4" rx="2"/>
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                </svg>
+                                <span>${provider.email || 'Not available'}</span>
+                            </div>
+                            
+                            <div class="about-box-inline">
+                                <h3>Bio</h3>
+                                <p>${provider.bio || 'No bio available.'}</p>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-message-large" onclick="sendMessage('${provider.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Send Message
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle modal function
+        function toggleModal(show) {
+            const modal = document.getElementById('ratingModal');
+            
+            if (show) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            } else {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                resetRatingForm();
+            }
+        }
+        async function sendMessage(providerId) {
+ 
+        // Show loading state
+        const btn = document.querySelector('.btn-message-large');
+        const originalText = btn.innerHTML;
+        try{
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        btn.disabled = true;
+        console.log("button clicked")
+        // Get or create conversation with the provider
+        const response = await fetch(`http://localhost:5003/api/messages/conversation/${providerId}`, {
+            method: 'GET',
+            credentials: 'include' // Send cookies for authentication
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                alert('Please login to send a message');
+                window.location.href = '../portal.html'; // Redirect to portal
+                return;
+            }
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const conversation = await response.json();
+        
+
+        // Redirect to chat page with conversation ID
+        window.location.href = `chat.html?conversationId=${conversation.id}`;
+
+    } catch (error) {
+        console.error('Error creating conversation:', error);
+        alert('Failed to start chat. Please try again.');
+        
+        // Reset button state
+        const btn = document.querySelector('.btn-message-large');
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+}
+        // Open rating modal with provider ID
+        function openRatingModal(providerId) {
+            currentProviderId = providerId;
+            toggleModal(true);
+        }
+
+        // Initialize star rating
+        function initializeStarRating() {
+            const stars = document.querySelectorAll('.star');
+            const ratingText = document.querySelector('.rating-text');
+            
+            const ratingTexts = {
+                1: 'Poor',
+                2: 'Fair',
+                3: 'Good',
+                4: 'Very Good',
+                5: 'Excellent'
+            };
+            
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    currentRating = value;
+                    updateStarDisplay();
+                    ratingText.textContent = ratingTexts[value] || 'Select rating';
+                });
+                
+                star.addEventListener('mouseover', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    highlightStars(value);
+                });
+            });
+            
+            const container = document.querySelector('.stars-container');
+            if (container) {
+                container.addEventListener('mouseleave', function() {
+                    updateStarDisplay();
+                });
+            }
+        }
+
+        function highlightStars(value) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                if (starValue <= value) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        function updateStarDisplay() {
+            highlightStars(currentRating);
+        }
+
+        function resetRatingForm() {
+            currentRating = 0;
+            const ratingComment = document.getElementById('ratingComment');
+            if (ratingComment) ratingComment.value = '';
+            const ratingText = document.querySelector('.rating-text');
+            if (ratingText) ratingText.textContent = 'Select rating';
+            updateStarDisplay();
+        }
+
+async function submitRating() {
+    if (currentRating === 0) {
+        alert('Please select a rating');
+        return;
+    }
+    console.log("i")
+    if (!currentProviderId) {
+        alert('Provider ID not found');
+        return;
+    }
+    
+    console.log(currentProviderId,currentRating)
+    const ratingData = {
+        providerId: currentProviderId, 
+        rating: currentRating,
+    };
+    
+    try {
+        const submitBtn = document.querySelector('.btn-submit');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Submitting...';
+        submitBtn.disabled = true;
+        
+        // UPDATED: Add 'credentials: "include"' to send cookies
+        const response = await fetch(`http://localhost:5003/api/rating`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include', // This is crucial for sending cookies
+            body: JSON.stringify(ratingData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            alert('Thank you for your review!');
+            toggleModal(false);
+            
+            // Refresh the provider data to show updated rating
+            if (providerId) {
+                const provider = await fetchProviderById(providerId);
+                renderProviderProfile(provider);
+            }
+        } else if (response.status === 401) {
+            // Handle unauthorized error
+            alert('Please login to rate this provider.');
+            toggleModal(false);
+          
+        } else {
+            const error = await response.text();
+            alert(`Failed to submit review: ${error || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+        alert('Failed to submit review. Please try again.');
+    } finally {
+        const submitBtn = document.querySelector('.btn-submit');
+        if (submitBtn) {
+            submitBtn.textContent = 'Submit Review';
+            submitBtn.disabled = false;
+        }
+    }
+}
+        
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStarRating();
+            
+            // Close modal when clicking outside
+            const modal = document.getElementById('ratingModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        toggleModal(false);
+                    }
+                });
+            }
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                const modal = document.getElementById('ratingModal');
+                if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+                    toggleModal(false);
+                }
+            });
+            
+            // Load provider data
+            async function loadProviderData() {
+                if (!providerId) {
+                    renderProviderProfile(null);
+                    return;
+                }
+                
+                try {
+                    const provider = await fetchProviderById(providerId);
+                    renderProviderProfile(provider);
+                } catch (error) {
+                    console.error('Error loading provider:', error);
+                    renderProviderProfile(null);
+                }
+            }
+            
+            loadProviderData();
+        });
+    </script>
+</body>
+</html>
