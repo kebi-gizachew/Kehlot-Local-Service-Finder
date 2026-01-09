@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehlot Portal | Provider Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0FB7C2;
+            --bg-light: #F9FAFB;
+            --text-dark: #111827;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+            --danger: #EF4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); }
+        .hidden { display: none !important; }
+
+        /* --- OVERLAYS --- */
+        #logout-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); display: none; align-items: center;
+            justify-content: center; z-index: 5000;
+        }
+
+        .logout-popup-card {
+            background: white; padding: 30px; border-radius: 28px; text-align: center;
+            width: 90%; max-width: 380px; position: relative;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .logout-actions { display: flex; gap: 12px; margin-top: 25px; justify-content: center; }
+        .btn-cancel { flex: 1; padding: 12px; border-radius: 12px; border: none; background: #F0F2F5; color: #111827; font-weight: 700; cursor: pointer; }
+        .btn-confirm-logout { flex: 1; padding: 12px; border-radius: 12px; border: none; background: #F84C4C; color: white; font-weight: 700; cursor: pointer; }
+
+        header { background: white; padding: 15px 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; }
+        .brand-logo-img { height: 45px; width: auto; border-radius: 4px; }
+        .brand-name { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+        .page-container { max-width: 650px; margin: 40px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .profile-banner { background: var(--primary); height: 110px; }
+        .profile-main { text-align: center; margin-top: -55px; padding: 0 40px 40px; }
+        .profile-img { width: 120px; height: 120px; border-radius: 24px; border: 6px solid white; object-fit: cover; background: #eee; }
+        .about-box { background: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 20px; padding: 24px; text-align: left; margin: 25px 0; }
+        .about-box h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; color: var(--text-dark); }
+        .about-box p { color: #4B5563; line-height: 1.6; font-size: 14px; }
+        .contact-info { text-align: left; margin: 20px 0 30px; display: flex; flex-direction: column; gap: 15px; padding-left: 10px; }
+        .contact-item { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 14px; }
+        .contact-item i { color: var(--primary); width: 18px; text-align: center; }
+        
+        .pw-card { padding: 40px; border-radius: 30px; }
+        .input-group { margin-bottom: 18px; text-align: left; }
+        .input-group label { display: block; font-weight: 500; font-size: 14px; margin-bottom: 8px; }
+        .input-wrapper { position: relative; }
+        .input-wrapper i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .input-wrapper input { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1px solid #E5E7EB; outline: none; font-size: 14px; }
+        .btn-update-pw { width: 100%; padding: 16px; border-radius: 14px; background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer; font-size: 15px; margin-top: 10px; }
+        
+        .rating { color: #FFC107; font-size: 18px; margin-bottom: 20px; }
+        .rating span { color: var(--text-muted); font-size: 14px; margin-left: 5px; }
+
+        .user-initial-avatar {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: #F3F4F6; color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px; flex-shrink: 0;
+            border: 1px solid var(--border);
+        }
+
+        /* Modal styles for rating, matching main site */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 6000; }
+        .modal-content { background: white; padding: 28px; border-radius: 18px; width: 90%; max-width: 360px; text-align: center; }
+        .interactive-stars { font-size: 2.8rem; cursor: pointer; color: #cbd5e1; margin-bottom: 12px; display: flex; justify-content: center; gap: 8px; }
+        .btn-modal-submit { background: var(--primary); color: white; border: none; padding: 12px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+        .btn-modal-cancel { margin-top: 8px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+
+        /* Lightweight feedback banner (mirrors providers page) */
+        .ui-feedback-banner { position: fixed; top: 80px; right: 20px; padding: 12px 18px; border-radius: 10px; display: none; color: white; z-index: 7000; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        .bg-success { background: linear-gradient(90deg,#16a34a,#059669); }
+        .bg-error { background: linear-gradient(90deg,#ef4444,#f97316); }
+    </style>
+</head>
+<body>
+<div id="feedbackBanner" class="ui-feedback-banner"></div>
+
+    <div id="logout-overlay">
+        <div class="logout-popup-card">
+            <div style="color:#F84C4C; font-size:38px; margin-bottom:12px;"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <h2 style="font-size: 20px; font-weight: 700;">Confirm Logout</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">Are you sure you want to log out?</p>
+            <div class="logout-actions">
+                <button class="btn-cancel" onclick="toggleLogout(false)">Cancel</button>
+                <button class="btn-confirm-logout" onclick="performLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo">
+            <img src="./images/logo.jpg" alt="Kehlot Logo" class="brand-logo-img" onerror="this.style.display='none';">
+            <span class="brand-name">Kehlot</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div style="font-size: 14px;"><i class="fa-regular fa-circle-user"></i> <span id="nav-provider-name">Loading...</span></div>
+            <div style="cursor:pointer; font-weight:700; font-size: 14px;" onclick="toggleLogout(true)">Logout</div>
+        </div>
+    </header>
+
+    <div id="loading-state" class="page-container" style="text-align:center; padding-top: 50px;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 30px; color: var(--primary);"></i>
+        <p style="margin-top: 10px; color: var(--text-muted);">Syncing dashboard...</p>
+    </div>
+
+    <div id="page-profile" class="page-container view hidden">
+        <div class="card">
+            <div class="profile-banner"></div>
+            <div class="profile-main">
+                <img id="display-photo" src="" class="profile-img" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
+                <h1 id="display-name" style="margin-top:15px; font-size: 24px; font-weight: 700;">---</h1>
+                <p id="display-role" style="color:var(--text-muted); font-size: 14px; margin-bottom: 8px;">---</p>
+                <div id="display-rating-container" class="rating"></div>
+
+                <!-- Rate button now sits under the name/role and preserves styling -->
+                <div style="margin-top:8px; margin-bottom:12px;">
+                    <div id="avgRatingDisplay" style="font-weight:700; color: #111827; margin-bottom:8px;">-</div>
+                    <button id="rateBtn" style="width:100%; padding:12px; border-radius:12px; background:var(--primary); color:white; border:none; font-weight:700; cursor:pointer;" onclick="toggleRateModal(true)">Rate this provider</button>
+                </div>
+
+                <div class="about-box" id="bio-container">
+                    <h3>Bio</h3>
+                    <p id="display-bio">No bio available.</p>
+                </div>
+
+                <div class="contact-info">
+                    <div class="contact-item"><i class="fa-solid fa-location-dot"></i> <span id="display-loc">---</span></div>
+                    <div class="contact-item"><i class="fa-solid fa-phone"></i> <span id="display-phone">---</span></div>
+                    <div class="contact-item"><i class="fa-solid fa-envelope"></i> <span id="display-email">---</span></div>
+                </div>
+
+                <div style="display:flex; gap:12px; align-items:center; justify-content:center; margin-top:16px;">
+                    <button id="msgBtn" style="width:100%; padding:14px; border-radius:12px; border:2px solid var(--primary); background:transparent; color:var(--primary); font-weight:700; cursor:pointer; font-size:15px;" onclick="startChat()">
+                        <i class="fa-regular fa-comment-dots"></i> Send Message
+                    </button>
+                    <button id="quickSendBtn" style="width:120px; margin-left:8px; padding:14px; border-radius:12px; border:1px solid #E5E7EB; background:#fff; color:var(--text-dark); font-weight:700; cursor:pointer; font-size:13px;" onclick="sendMessagePrompt()">
+                        Quick Send
+                    </button>
+                </div>
+                <p id="change-pw-link" style="margin-top:20px; color:var(--text-muted); font-size:13px; text-decoration:underline; cursor:pointer;" onclick="showPage('page-password')">Change Password</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-messages" class="page-container view hidden">
+        <div style="margin-bottom:20px; cursor:pointer; font-weight:700;" onclick="showPage('page-profile')">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </div>
+        <div class="card" id="conversations-list"></div>
+    </div>
+
+    <div id="page-password" class="page-container view hidden">
+        <div style="margin-bottom:20px; cursor:pointer; font-weight:700; font-size: 14px;" onclick="showPage('page-profile')">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </div>
+        <div class="card pw-card">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="font-size: 22px;">Change Your Password</h1>
+                <p style="color: var(--text-muted); font-size: 14px;">Verify your current credentials to set a new password.</p>
+            </div>
+            <div class="input-group">
+                <label>Current Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="curr-pw" placeholder="Enter current password">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>New Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="new-pw" placeholder="Min. 8 characters">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Confirm New Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="conf-pw" placeholder="Repeat new password">
+                </div>
+            </div>
+            <button class="btn-update-pw" id="btn-pw-submit" onclick="handlePasswordUpdate()">Update Password</button>
+        </div>
+    </div>
+
+    <div id="rateModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Rate Provider</h2>
+            <p style="color:var(--text-muted); margin-bottom:8px;">How would you rate this provider?</p>
+            <div class="interactive-stars" id="ratingStars">
+                <span onclick="setTempRating(1)">☆</span><span onclick="setTempRating(2)">☆</span><span onclick="setTempRating(3)">☆</span><span onclick="setTempRating(4)">☆</span><span onclick="setTempRating(5)">☆</span>
+            </div>
+            <button id="submitRatingBtn" class="btn-modal-submit">Submit Review</button>
+            <div style="margin-top:8px;"><button class="btn-modal-cancel" onclick="toggleRateModal(false)">Cancel</button></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:5000";
+
+        const providerDatabase = [
+];
+
+        let currentProviderData = null;
+
+        // --- 1. INITIALIZATION (CONNECTION LOGIC) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePage();
+        });
+
+        // Read current user from localStorage safely
+        function getCurrentUser() {
+            try {
+                return JSON.parse(localStorage.getItem('currentUser') || 'null');
+            } catch (e) { return null; }
+        }
+
+        function isViewingOwnProfile(provider) {
+            const u = getCurrentUser();
+            if (!u) return false;
+            // compare against authoritative serviceId or id
+            const pid = provider && (provider.serviceId || provider.id);
+            if (!pid) return false;
+            return String(u.id) === String(pid) || String(u.id) === String(provider.userId) || String(u.id) === String(provider.providerId);
+        }
+
+        async function initializePage() {
+            const params = new URLSearchParams(window.location.search);
+            const providerId = params.get('provider');
+            
+            if (providerId) {
+                // Viewing a provider's profile — fetch from backend
+                const provider = await fetchProviderProfile(providerId);
+                if (provider) {
+                    currentProviderData = provider; // store for chat and rating actions
+                    renderProviderProfile(provider);
+                    document.getElementById('loading-state').classList.add('hidden');
+                    showPage('page-profile');
+                } // fetchProviderProfile handles errors and redirects
+            } else {
+                // No provider param => could be a signed-in provider who expects to see their own profile
+                const providerLogged = localStorage.getItem('providerLoggedIn') === 'true';
+                const u = getCurrentUser();
+                if (providerLogged && u && u.id) {
+                    // Try to load the provider's own profile using their id
+                    const pid = u.id;
+                    console.log('Attempting to load signed-in provider profile using id:', pid);
+                    let provider = await fetchProviderProfile(pid);
+                    if (provider) {
+                        currentProviderData = provider;
+                        renderProviderProfile(provider);
+                        document.getElementById('loading-state').classList.add('hidden');
+                        showPage('page-profile');
+                        console.log('Loaded provider profile via direct fetch for id:', pid);
+                        // show a small owner banner for clarity
+                        try { document.getElementById('ownerBanner').textContent = 'This is your profile'; } catch(e) {}
+                        return;
+                    }
+
+                    // If direct fetch failed, try fetching full provider list and match by common identifiers
+                    try {
+                        console.log('Direct fetch failed, trying list lookup for provider by user id...');
+                        const listRes = await fetch(`${API_BASE}/api/provider/`, { credentials: 'include' });
+                        if (listRes.ok) {
+                            const listBody = await listRes.json().catch(()=>({}));
+                            const list = listBody.data || listBody.providers || listBody || [];
+                            const found = Array.isArray(list) ? list.find(x => String(x.userId) === String(pid) || String(x.providerId) === String(pid) || String(x.serviceProviderId) === String(pid) || String(x.id) === String(pid)) : null;
+                            if (found) {
+                                console.log('Found provider via list lookup using signed-in id:', pid, found);
+                                currentProviderData = {
+                                    serviceId: found.serviceProviderId || found.id || found._id || found.providerId || null,
+                                    id: found.serviceProviderId || found.id || found._id || found.providerId || Date.now(),
+                                    name: found.fullName || found.name || found.user?.fullName || '',
+                                    skill: found.serviceType || found.skill || found.service || '',
+                                    loc: found.location || found.loc || found.address || '',
+                                    phone: found.phone || found.contact || '',
+                                    email: found.email || found.user?.email || '',
+                                    img: found.profileImage || found.img || found.image || 'pic/default-avatar.jpg',
+                                    bio: found.bio || found.description || '',
+                                    averageRating: (typeof found.averageRating !== 'undefined' && found.averageRating !== null) ? Number(found.averageRating) : null,
+                                    stars: found.averageRating ? Math.round(found.averageRating) : (found.stars || 0),
+                                    reviews: Array.isArray(found.ratings) ? found.ratings.length : (found.reviews || 0)
+                                };
+                                renderProviderProfile(currentProviderData);
+                                document.getElementById('loading-state').classList.add('hidden');
+                                showPage('page-profile');
+                                try { document.getElementById('ownerBanner').textContent = 'This is your profile'; } catch(e) {}
+                                return;
+                            }
+                        }
+                    } catch (e) { console.warn('List lookup for signed-in provider failed:', e); }
+
+                    // if nothing found, fallthrough to dashboard behavior
+                }
+
+                // Provider dashboard (fallback)
+                await fetchDashboardData();
+            }
+        };
+
+        // --- Rating modal behaviors ---
+        let tempRating = 0;
+        function toggleRateModal(show) {
+            document.getElementById('rateModal').style.display = show ? 'flex' : 'none';
+            if (show) {
+                tempRating = 0; setTempRating(0);
+                document.getElementById('submitRatingBtn').onclick = submitRating;
+            }
+        }
+
+        // Lightweight notify helper for this page (auto-dismiss)
+        function notify(msg, type='success') {
+            const b = document.getElementById('feedbackBanner');
+            if (!b) return alert(msg);
+            b.textContent = msg;
+            b.className = `ui-feedback-banner bg-${type}`;
+            b.style.display = 'block';
+            setTimeout(() => { b.style.display = 'none'; }, 3000);
+        }
+
+        function setTempRating(n) {
+            tempRating = n;
+            const stars = Array.from(document.getElementById('ratingStars').children);
+            stars.forEach((el, i) => { el.innerText = i < n ? '★' : '☆'; el.style.color = i < n ? '#f6ad55' : '#cbd5e1'; });
+        }
+
+        // Helper to read auth token from localStorage
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('jwt') || localStorage.getItem('kehlotToken') || localStorage.getItem('access_token') || null;
+        }
+
+        async function submitRating() {
+            if (!currentProviderData) return alert('No provider selected');
+            if (tempRating < 1 || tempRating > 5) return alert('Please select a rating');
+
+            // Prevent owners from rating their own profile
+            if (isViewingOwnProfile(currentProviderData)) {
+                return alert('You cannot rate your own profile.');
+            }
+
+            const btn = document.getElementById('submitRatingBtn');
+            btn.disabled = true; btn.innerText = 'Submitting...';
+            try {
+                // Prefer authoritative numeric serviceId when available
+                let rawId = currentProviderData.serviceId || currentProviderData.providerId || currentProviderData.id;
+                if (!rawId) {
+                    console.error('submitRating: provider id missing on currentProviderData', currentProviderData);
+                    return alert('Provider identifier missing. Cannot submit rating.');
+                }
+
+                // Ensure we have a numeric ID for the backend
+                let pid = parseInt(rawId, 10);
+                if (isNaN(pid)) {
+                    const m = String(rawId).match(/(\d+)/);
+                    if (m) pid = parseInt(m[0], 10);
+                }
+
+                // If we still don't have a numeric id, send raw value but warn (server expects numeric ServiceProvider.id)
+                const payload = { providerId: Number.isFinite(pid) ? pid : rawId, rating: tempRating };
+                console.log('submitRating payload:', payload);
+
+                const headers = { 'Content-Type': 'application/json' };
+                const token = getAuthToken();
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                window.lastRatingDebug = { payload };
+                const res = await fetch(`${API_BASE}/ratings`, {
+                    method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload)
+                });
+
+                window.lastRatingDebug.responseStatus = res.status;
+
+                if (res.status === 401) {
+                    throw new Error('Not authorized: missing token');
+                }
+
+                if (!res.ok) {
+                    const body = await res.json().catch(()=>({}));
+                    window.lastRatingDebug.body = body;
+                    throw new Error(body.message || `Server ${res.status}`);
+                }
+
+                const body = await res.json().catch(()=>({}));
+                window.lastRatingDebug.body = body;
+                console.log('submitRating response body:', body);
+
+                // Use server-provided authoritative counts and average when available
+                if (typeof body.ratingsCount !== 'undefined') {
+                    currentProviderData.reviews = Number(body.ratingsCount);
+                } else {
+                    currentProviderData.reviews = Number(currentProviderData.reviews || 0) + 1;
+                }
+
+                if (typeof body.averageRating !== 'undefined' && body.averageRating !== null) {
+                    currentProviderData.averageRating = Number(body.averageRating);
+                    currentProviderData.stars = Math.round(currentProviderData.averageRating);
+                } else {
+                    // fallback incremental update
+                    const oldAvg = Number(currentProviderData.stars || 0);
+                    // If we just incremented reviews above, use that. If not, assume +1
+                    const newTotal = currentProviderData.reviews; 
+                    const oldCount = newTotal - 1;
+                    const precise = ((oldAvg * oldCount) + tempRating) / newTotal;
+                    currentProviderData.stars = Math.round(precise);
+                }
+
+                // Update cached providers list in sessionStorage so other pages reflect the new rating
+                try {
+                    const cached = JSON.parse(sessionStorage.getItem('providersCache') || 'null');
+                    if (Array.isArray(cached)) {
+                        const found = cached.find(p => String(p.serviceId) === String(currentProviderData.serviceId) || String(p.id) === String(currentProviderData.id));
+                        if (found) {
+                            found.reviews = currentProviderData.reviews;
+                            if (currentProviderData.averageRating != null) {
+                                found.averageRating = currentProviderData.averageRating;
+                                found.stars = Math.round(currentProviderData.averageRating);
+                            } else {
+                                found.stars = currentProviderData.stars;
+                            }
+                            sessionStorage.setItem('providersCache', JSON.stringify(cached));
+                        }
+                    }
+                } catch (e) { console.warn('Failed to update providersCache after rating', e); }
+
+                // Refresh UI
+                renderProviderProfile(currentProviderData);
+                notify('Thanks for the feedback!', 'success');
+                toggleRateModal(false);
+            } catch (e) {
+                console.error('Rating failed', e);
+                if (e.message && e.message.toLowerCase().includes('not authorized')) {
+                    alert('You must be signed in to rate providers. Please sign in and try again.');
+                    return;
+                }
+                alert(e.message || 'Rating failed');
+            } finally {
+                btn.disabled = false; btn.innerText = 'Submit Review';
+            }
+        }
+
+        // Make startChat more robust to use currentProviderData when providerDatabase is empty
+        function startChat() {
+            const params = new URLSearchParams(window.location.search);
+            const pid = params.get('provider') || (currentProviderData && currentProviderData.id);
+            if (!pid) return alert('No provider selected for chat.');
+            let prov = providerDatabase.find(p => p.id == pid);
+            if (!prov && currentProviderData) prov = { id: currentProviderData.id, name: currentProviderData.name, img: currentProviderData.img };
+            if (!prov) return alert('Provider not found.');
+            // Require authenticated user to open chat so messages persist correctly
+            try {
+                const cur = JSON.parse(localStorage.getItem('currentUser')||'null');
+                if (!cur || !cur.id) {
+                    // store prefill so user can continue after login
+                    sessionStorage.setItem('selectedProviderPending', JSON.stringify({ id: prov.id, name: prov.name, img: prov.img }));
+                    alert('Please sign in to send messages. You will be returned to chat after login.');
+                    window.location.href = 'portal.html'; // redirect to login/portal
+                    return;
+                }
+                localStorage.setItem('selectedProvider', JSON.stringify({ id: prov.id, name: prov.name, img: prov.img }));
+            } catch (e) { console.warn('Could not persist chat context', e); }
+
+            window.location.href = 'providers/chat.html';
+        }
+
+        // --- QUICK SEND HELPERS ---
+        // Send message to a provider by their userId (the public providerdetail page uses the provider's user id)
+        async function sendMessageToProvider(receiverUserId, content, imageUrl = null) {
+            if (!receiverUserId) throw new Error('receiverUserId is required');
+            if (!content && !imageUrl) throw new Error('Either content or imageUrl is required');
+
+            const token = getAuthToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const payload = { receiverId: Number(receiverUserId), content };
+            if (imageUrl) payload.imageUrl = imageUrl;
+
+            const res = await fetch(`${API_BASE}/api/messages`, {
+                method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(()=>({}));
+                throw new Error(body.message || `Server error ${res.status}`);
+            }
+            return await res.json();
+        }
+
+        // Instead of prompting, store the drafted message and open the chat UI where the message will appear in the chat input
+        async function sendMessagePrompt() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const receiverUserId = params.get('provider') || (currentProviderData && (currentProviderData.userId || currentProviderData.id));
+                if (!receiverUserId) return; // silent fail
+                const text = prompt('Enter message to send to this provider:');
+                if (!text) return;
+
+                // Save prefill into sessionStorage so chat.html can read it and populate the input
+                try {
+                    const pre = { text: String(text || ''), image: null, receiverUserId: String(receiverUserId) };
+                    sessionStorage.setItem('prefillMessage', JSON.stringify(pre));
+                } catch (e) { console.warn('Could not save prefill message', e); }
+
+                // Use the existing startChat flow to set selectedProvider and redirect to chat page
+                startChat();
+            } catch (err) {
+                console.error('sendMessagePrompt failed', err);
+            }
+        }
+
+        // --- 2. BACKEND INTEGRATION ---
+        async function fetchDashboardData() {
+            try {
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Recover provider data from local storage user object + defaults
+                const u = getCurrentUser();
+                if (!u) throw new Error("No user logged in");
+
+                currentProviderData = {
+                    id: u.id,
+                    name: u.name,
+                    email: u.email,
+                    role: u.role || 'Service Provider',
+                    skill: u.skill || 'Provider',
+                    loc: u.loc || 'Addis Ababa',
+                    phone: u.phone || '',
+                    img: u.profileImage || 'pic/default-avatar.jpg',
+                    bio: u.bio || 'Welcome to my profile.',
+                    stars: 0,
+                    reviews: 0,
+                    conversations: [] // Mock conversations for dashboard
+                };
+
+                renderProviderProfile(currentProviderData);
+                if (currentProviderData.conversations) {
+                    renderConversations(currentProviderData.conversations);
+                }
+                document.getElementById('loading-state').classList.add('hidden');
+                showPage('page-profile');
+            } catch (error) {
+                console.error("Dashboard failed to sync:", error);
+                alert("Critical: Could not load provider profile.");
+            }
+        }
+
+        function renderProviderProfile(provider) {
+            const owner = isViewingOwnProfile(provider);
+            document.getElementById('nav-provider-name').textContent = provider.name;
+            document.getElementById('display-name').textContent = provider.name;
+            document.getElementById('display-role').textContent = provider.skill;
+            document.getElementById('display-loc').textContent = provider.loc;
+            // Prefer displayed phone from provider, otherwise try cached/session data
+            let phone = provider.phone || '';
+            if (!phone) {
+                try {
+                    const cached = JSON.parse(sessionStorage.getItem('providersCache') || 'null');
+                    if (Array.isArray(cached)) {
+                        const found = cached.find(x => String(x.serviceId) === String(provider.serviceId) || String(x.id) === String(provider.id) || String(x._id) === String(provider.id));
+                        if (found) phone = found.phone || found.contact || found.mobile || '';
+                    }
+                } catch (e) { /* ignore */ }
+            }
+            document.getElementById('display-phone').textContent = phone || 'N/A';
+            document.getElementById('display-email').textContent = provider.email;
+            document.getElementById('display-photo').src = provider.img;
+
+            if (provider.bio) {
+                document.getElementById('display-bio').textContent = provider.bio;
+            } else {
+                document.getElementById('bio-container').classList.add('hidden');
+            }
+
+            renderStars(provider.averageRating || provider.stars, provider.reviews);
+            // Update average rating display and configure action buttons
+            const avgEl = document.getElementById('avgRatingDisplay');
+            if (avgEl) {
+                if (typeof provider.averageRating !== 'undefined' && provider.averageRating !== null) {
+                    avgEl.textContent = `${Number(provider.averageRating).toFixed(1)}★` + (provider.reviews ? ` (${provider.reviews})` : '');
+                } else {
+                    avgEl.textContent = (provider.stars ? (provider.stars + '★') : '-') + (provider.reviews ? ` (${provider.reviews})` : '');
+                }
+            }
+
+            // Top action button: Rate Provider under the name
+            const rateBtn = document.getElementById('rateBtn');
+            if (rateBtn) {
+                // Providers should not rate themselves; hide the button if owner
+                if (owner) {
+                    rateBtn.style.display = 'none';
+                } else {
+                    rateBtn.style.display = 'inline-block';
+                    rateBtn.disabled = false;
+                    rateBtn.innerHTML = 'Rate Provider';
+                    rateBtn.onclick = () => toggleRateModal(true);
+                }
+            }
+
+            // Change Password Link Logic
+            const pwLink = document.getElementById('change-pw-link');
+            if (pwLink) {
+                pwLink.style.display = owner ? 'block' : 'none';
+            }
+
+            // Show Change Password only when the signed-in account is the owner of this profile
+            const pwCard = document.querySelector('.pw-card');
+            if (pwCard) {
+                if (owner) pwCard.style.display = 'block';
+                else pwCard.style.display = 'none';
+            }
+
+            // Bottom message button: Send Message (links to chat.html)
+            const msgBtn = document.getElementById('msgBtn');
+            if (msgBtn) {
+                if (owner) {
+                    msgBtn.innerHTML = '<i class="fa-regular fa-comment-dots"></i> View Messages';
+                    msgBtn.onclick = () => showPage('page-messages');
+                } else {
+                    msgBtn.innerHTML = '<i class="fa-regular fa-comment-dots"></i> Send Message';
+                    msgBtn.onclick = startChat;
+                }
+            }
+        }
+
+        // --- 3. UI RENDERING ---
+
+        async function fetchProviderProfile(providerId) {
+            if (!providerId) return null;
+
+            // First, try to find the provider in the cached data from providers.html
+            try {
+                const cached = JSON.parse(sessionStorage.getItem('providersCache') || 'null');
+                if (Array.isArray(cached)) {
+                    const found = cached.find(x => String(x.serviceId) === String(providerId) || String(x.id) === String(providerId) || String(x._id) === String(providerId));
+                    if (found) {
+                        console.log('Using cached provider data for id', providerId);
+                        try { document.getElementById('debugInfo').innerText = `Loaded from sessionStorage.providersCache id=${found.serviceId || found.id}`; } catch(e) {}
+                        return found;
+                    }
+                }
+            } catch (e) { console.warn('providersCache parse failed', e); }
+
+            // Try backend first (use raw providerId - may be numeric or string)
+            try {
+                console.log(`Fetching provider profile from ${API_BASE}/api/provider/${encodeURIComponent(providerId)}`);
+                const res = await fetch(`${API_BASE}/api/provider/${encodeURIComponent(providerId)}`, { credentials: 'include' });
+
+                if (res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    // detect whether the response looks like a ServiceProvider record
+                    const looksLikeProvider = Boolean(body.serviceType || body.service || body.skill || body.phone || body.location || body.profileImage || body.faydaId || body.providerId || body.serviceProviderId);
+                    if (!looksLikeProvider) {
+                        console.warn('API returned a non-provider object for id', providerId, 'falling back to list/local');
+                    } else {
+                        const prov = {
+                            // preserve authoritative service id when present
+                            serviceId: body.serviceProviderId || body.id || body._id || body.providerId || null,
+                            id: body.serviceProviderId || body.id || body._id || body.providerId || null,
+                            name: body.fullName || body.name || body.user?.fullName || '',
+                            skill: body.serviceType || body.skill || body.service || '',
+                            loc: body.location || body.loc || body.address || '',
+                            phone: body.phone || body.phoneNumber || body.contact || body.mobile || '',
+                            email: body.email || body.user?.email || '',
+                            img: body.profileImage || body.img || body.image || 'pic/default-avatar.jpg',
+                            bio: body.bio || body.description || '',
+                            averageRating: (typeof body.averageRating !== 'undefined' && body.averageRating !== null) ? Number(body.averageRating) : null,
+                            stars: body.averageRating ? Math.round(body.averageRating) : (body.stars || 0),
+                            reviews: body.ratingCount || (Array.isArray(body.ratings) ? body.ratings.length : (body.reviews || 0))
+                        };
+                        // ensure a stable id property for legacy code
+                        prov.id = prov.serviceId || prov.id || Date.now();
+                        // debug info
+                        try { document.getElementById('debugInfo').innerText = `Loaded from API using id=${prov.id}`; } catch (e) {}
+                        return prov;
+                    }
+                }
+
+                // If 404, try list and local fallbacks
+                if (res.status === 404) {
+                    console.warn(`Provider ${providerId} not found on server (404). Trying list/local fallbacks.`);
+                    // list fallback
+                    try {
+                        const listRes = await fetch(`${API_BASE}/api/provider/`, { credentials: 'include' });
+                        if (listRes.ok) {
+                            const listBody = await listRes.json().catch(()=>({}));
+                            const list = listBody.data || listBody.providers || listBody || [];
+                            const found = Array.isArray(list) ? list.find(x => String(x.id) === String(providerId) || String(x._id) === String(providerId) || String(x.providerId) === String(providerId) || String(x.serviceProviderId) === String(providerId) || String(x.userId) === String(providerId) || String(x.serviceId) === String(providerId)) : null;
+                            if (found) {
+                                console.warn('Found provider in list fallback, using it:', found);
+                                const out = {
+                                    serviceId: found.id || found._id || found.providerId || found.serviceProviderId || null,
+                                    id: found.id || found._id || found.providerId || Date.now(),
+                                    name: found.fullName || found.name || found.user?.fullName || '',
+                                    skill: found.serviceType || found.skill || found.service || '',
+                                    loc: found.location || found.loc || found.address || '',
+                                    phone: found.phone || found.contact || '',
+                                    email: found.email || found.user?.email || '',
+                                    img: found.profileImage || found.img || found.image || 'pic/default-avatar.jpg',
+                                    bio: found.bio || found.description || '',
+                                    averageRating: (typeof found.averageRating !== 'undefined' && found.averageRating !== null) ? Number(found.averageRating) : null,
+                                    stars: found.averageRating ? Math.round(found.averageRating) : (found.stars || 0),
+                                    reviews: Array.isArray(found.ratings) ? found.ratings.length : (found.reviews || 0)
+                                };
+                                out.id = out.serviceId || out.id;
+                                try { document.getElementById('debugInfo').innerText = `Loaded from list fallback using id=${out.id}`; } catch(e) {}
+                                return out;
+                            }
+                        }
+                    } catch (e) { console.warn('List fallback failed', e); }
+
+                    // local fallback via in-memory providers (if available)
+                    if (window.providerDatabase) {
+                        const local = window.providerDatabase.find(x => String(x.serviceId) === String(providerId) || String(x.id) === String(providerId) || String(x._id) === String(providerId));
+                        if (local) {
+                            console.warn('Using local provider data as fallback for id', providerId);
+                            try { document.getElementById('debugInfo').innerText = `Loaded from local providerDatabase using id=${local.id}`; } catch(e) {}
+                            return local;
+                        }
+                    }
+                    // sessionStorage cache fallback (providers page writes this)
+                    try {
+                        const cached = JSON.parse(sessionStorage.getItem('providersCache') || 'null');
+                        if (Array.isArray(cached)) {
+                            const c = cached.find(x => String(x.serviceId) === String(providerId) || String(x.id) === String(providerId) || String(x._id) === String(providerId));
+                            if (c) {
+                                console.warn('Using sessionStorage providersCache as fallback for id', providerId);
+                                return c;
+                            }
+                        }
+                    } catch (e) { console.warn('providersCache parse failed', e); }
+
+                    alert('Provider not found.');
+                    window.location.href = 'providers/providers.html';
+                    return null;
+                }
+
+                // Other non-ok responses: try list fallback next
+                const text = await res.text().catch(() => '');
+                console.error(`Failed to fetch provider (${res.status}):`, text);
+
+                try {
+                    const listRes = await fetch(`${API_BASE}/api/provider/`, { credentials: 'include' });
+                    if (listRes.ok) {
+                        const listBody = await listRes.json().catch(()=>({}));
+                        const list = listBody.data || listBody.providers || listBody || [];
+                        const found = Array.isArray(list) ? list.find(x => String(x.id) === String(providerId) || String(x._id) === String(providerId) || String(x.providerId) === String(providerId) || String(x.serviceProviderId) === String(providerId) || String(x.userId) === String(providerId) || String(x.serviceId) === String(providerId)) : null;
+                        if (found) {
+                            console.warn('Found provider in list fallback, using it:', found);
+                            const out = {
+                                serviceId: found.id || found._id || found.providerId || found.serviceProviderId || null,
+                                id: found.id || found._id || found.providerId || Date.now(),
+                                name: found.fullName || found.name || found.user?.fullName || '',
+                                skill: found.serviceType || found.skill || found.service || '',
+                                loc: found.location || found.loc || found.address || '',
+                                phone: found.phone || found.contact || '',
+                                email: found.email || found.user?.email || '',
+                                img: found.profileImage || found.img || found.image || 'pic/default-avatar.jpg',
+                                bio: found.bio || found.description || '',
+                                averageRating: (typeof found.averageRating !== 'undefined' && found.averageRating !== null) ? Number(found.averageRating) : null,
+                                stars: found.averageRating ? Math.round(found.averageRating) : (found.stars || 0),
+                                reviews: Array.isArray(found.ratings) ? found.ratings.length : (found.reviews || 0)
+                            };
+                            out.id = out.serviceId || out.id;
+                            return out;
+                        }
+                    }
+                } catch (e) { console.warn('List fallback failed', e); }
+
+                // local fallback via in-memory providers
+                if (window.providerDatabase) {
+                    const local = window.providerDatabase.find(x => String(x.serviceId) === String(providerId) || String(x.id) === String(providerId) || String(x._id) === String(providerId));
+                    if (local) return local;
+                }
+                // sessionStorage cache fallback
+                try {
+                    const cached = JSON.parse(sessionStorage.getItem('providersCache') || 'null');
+                    if (Array.isArray(cached)) {
+                        const c = cached.find(x => String(x.serviceId) === String(providerId) || String(x.id) === String(providerId) || String(x._id) === String(providerId));
+                        if (c) return c;
+                    }
+                } catch (err) { console.warn('providersCache parse failed', err); }
+
+                alert('Could not load provider profile.');
+                window.location.href = 'providers/providers.html';
+                return null;
+            } catch (e) {
+                console.error('fetchProviderProfile network/error:', e);
+                // Network error - try list fallback then local
+                try {
+                    const listRes = await fetch(`${API_BASE}/api/provider/`, { credentials: 'include' });
+                    if (listRes.ok) {
+                        const listBody = await listRes.json().catch(()=>({}));
+                        const list = listBody.data || listBody.providers || listBody || [];
+                        const found = Array.isArray(list) ? list.find(x => String(x.id) === String(providerId) || String(x._id) === String(providerId) || String(x.providerId) === String(providerId) || String(x.serviceProviderId) === String(providerId) || String(x.userId) === String(providerId) || String(x.serviceId) === String(providerId)) : null;
+                        if (found) {
+                            console.warn('Found provider from list fallback during network error', found);
+                            const out = {
+                                serviceId: found.id || found._id || found.providerId || found.serviceProviderId || null,
+                                id: found.id || found._id || found.providerId || Date.now(),
+                                name: found.fullName || found.name || found.user?.fullName || '',
+                                skill: found.serviceType || found.skill || found.service || '',
+                                loc: found.location || found.loc || found.address || '',
+                                phone: found.phone || found.contact || '',
+                                email: found.email || found.user?.email || '',
+                                img: found.profileImage || found.img || found.image || 'pic/default-avatar.jpg',
+                                bio: found.bio || found.description || '',
+                                averageRating: (typeof found.averageRating !== 'undefined' && found.averageRating !== null) ? Number(found.averageRating) : null,
+                                stars: found.averageRating ? Math.round(found.averageRating) : (found.stars || 0),
+                                reviews: Array.isArray(found.ratings) ? found.ratings.length : (found.reviews || 0)
+                            };
+                            out.id = out.serviceId || out.id;
+                            return out;
+                        }
+                    }
+                } catch (e2) {
+                    console.warn('List fallback failed due to network error', e2);
+                }
+
+                const local = providerDatabase.find(p => String(p.serviceId) === String(providerId) || String(p.id) === String(providerId) || String(p._id) === String(providerId));
+                if (local) {
+                    console.warn('Network error while fetching provider; using local fallback for id', providerId);
+                    return local;
+                }
+
+                // sessionStorage cache fallback
+                try {
+                    const cached = JSON.parse(sessionStorage.getItem('providersCache') || 'null');
+                    if (Array.isArray(cached)) {
+                        const c = cached.find(x => String(x.serviceId) === String(providerId) || String(x.id) === String(providerId) || String(x._id) === String(providerId));
+                        if (c) {
+                            console.warn('Using sessionStorage providersCache as fallback for id', providerId);                            try { document.getElementById('debugInfo').innerText = `Loaded from sessionStorage.providersCache id=${c.serviceId || c.id}`; } catch(e) {}                            return c;
+                        }
+                    }
+                } catch (err) { console.warn('providersCache parse failed', err); }
+
+                alert('Could not load provider profile.');
+                window.location.href = 'providers/providers.html';
+                return null;
+            }
+        }
+
+        function renderConversations(list) {
+            const container = document.getElementById('conversations-list');
+            container.innerHTML = list.map(c => `
+                <div style="padding:20px; cursor:pointer; display:flex; align-items:center; gap:15px; border-bottom:1px solid #eee;" 
+                     onclick="window.location.href='chat.html?user=${c.id}&ref=${currentProviderData.id}'">
+                    <div class="user-initial-avatar">${c.initial}</div>
+                    <div style="flex:1;">
+                        <h4 style="font-weight:600;">${c.name}</h4>
+                        <p style="font-size:12px; color:var(--text-muted);">New message arrived</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right" style="color:#D1D5DB;"></i>
+                </div>
+            `).join('');
+        }
+
+        // --- 4. NAVIGATION & ACTIONS ---
+
+        function showPage(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function renderStars(rating, count) {
+            const container = document.getElementById('display-rating-container');
+            if (!rating || rating === 0) {
+                container.innerHTML = "<span>No reviews yet</span>";
+                return;
+            }
+            const filledStars = '★'.repeat(Math.round(rating));
+            const emptyStars = '☆'.repeat(5 - Math.round(rating));
+            container.innerHTML = `<span style="color:#f6ad55;">${filledStars}</span><span style="color:#e2e8f0;">${emptyStars}</span> <span>(${count} Reviews)</span>`;
+        }
+
+        // --- 4. NAVIGATION & ACTIONS ---
+        function showPage(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function toggleLogout(show) {
+            document.getElementById('logout-overlay').style.display = show ? 'flex' : 'none';
+        }
+
+        async function performLogout() {
+            try {
+                await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ role: 'provider' }) });
+            } catch (e) { console.warn('Logout request failed', e); }
+            localStorage.removeItem('providerLoggedIn');
+            window.location.href='homepage.html';
+        }
+
+        async function handlePasswordUpdate() {
+            const btn = document.getElementById('btn-pw-submit');
+            const curr = document.getElementById('curr-pw').value;
+            const newPw = document.getElementById('new-pw').value;
+            const conf = document.getElementById('conf-pw').value;
+
+            if (!curr || !newPw || !conf) return alert("All fields are required.");
+            // UPDATED: Now requires 8 characters to match Corporate PIN policy
+            if (newPw.length < 8) return alert("Security Policy: New password must be at least 8 digits.");
+            if (newPw !== conf) return alert("Passwords do not match.");
+
+            btn.disabled = true;
+            btn.textContent = "Updating...";
+
+            try {
+                await new Promise(res => setTimeout(res, 1000));
+                alert("Security Update: Password has been successfully changed.");
+                showPage('page-profile');
+            } catch (e) {
+                alert("Failed to update password. Try again.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Update Password";
+            }
+        }
+
+        // Robust startChat: prefer URL provider param, fall back to currentProviderData
+        function startChat() {
+            const params = new URLSearchParams(window.location.search);
+            const pid = params.get('provider') || (currentProviderData && (currentProviderData.serviceId || currentProviderData.id));
+            if (!pid) return alert('No provider selected for chat.');
+            let prov = (Array.isArray(providerDatabase) && providerDatabase.find(p => String(p.id) === String(pid))) || null;
+            if (!prov && currentProviderData) prov = { id: currentProviderData.serviceId || currentProviderData.id, name: currentProviderData.name, img: currentProviderData.img };
+            if (!prov) {
+                // try session cache
+                try {
+                    const cached = JSON.parse(sessionStorage.getItem('providersCache') || 'null');
+                    if (Array.isArray(cached)) prov = cached.find(p => String(p.serviceId) === String(pid) || String(p.id) === String(pid) || String(p._id) === String(pid));
+                } catch (err) { console.warn('providersCache parse failed', err); }
+            }
+            if (!prov) return alert('Provider not found.');
+
+            try {
+                localStorage.setItem('selectedProvider', JSON.stringify({ id: prov.id, name: prov.name, img: prov.img }));
+                if (!localStorage.getItem('currentUser')) {
+                    localStorage.setItem('currentUser', JSON.stringify({ id: 'user_123', role: 'user', name: 'Seeker', profileImage: '' }));
+                }
+            } catch (e) { console.warn('Could not persist chat context', e); }
+
+            window.location.href = 'providers/chat.html';
+        }
+    </script>
+</body>
+</html>

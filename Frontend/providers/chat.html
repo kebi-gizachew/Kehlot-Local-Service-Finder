@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kehlot Unified Chat System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+        :root {
+            --kehlot-teal: #0F98B3;
+            --user-bubble: #E9E9EB;
+            --text-dark: #1F2937;
+            --bg-light: #F8FAFC;
+        }
+
+        body, html { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background: #F0F2F5; overflow: hidden; }
+
+        .app-shell { display: flex; align-items: center; justify-content: center; height: 100vh; padding: 20px; box-sizing: border-box; }
+        .chat-container { 
+            width: 100%; max-width: 500px; height: 100%; background: white; 
+            display: flex; flex-direction: column; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden;
+        }
+
+        .chat-header { padding: 15px 20px; background: var(--kehlot-teal); color: white; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        
+        .avatar-circle { 
+            width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
+            overflow: hidden; border: 1px solid rgba(255,255,255,0.3); flex-shrink: 0;
+            text-transform: uppercase; font-size: 16px;
+        }
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        .chat-body { flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 12px; background: var(--bg-light); }
+        .message { max-width: 80%; display: flex; align-items: flex-end; gap: 8px; position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .message.sent { align-self: flex-end; }
+        .message.received { align-self: flex-start; }
+
+        .bubble { 
+            padding: 10px 14px; border-radius: 18px; font-size: 14.5px; line-height: 1.5; 
+            word-wrap: break-word; overflow-wrap: anywhere; white-space: pre-wrap;
+            position: relative;
+        }
+        .sent .bubble { background: var(--kehlot-teal); color: white; border-bottom-right-radius: 4px; }
+        .received .bubble { background: var(--user-bubble); color: var(--text-dark); border-bottom-left-radius: 4px; }
+
+        /* Telegram-like popup menu */
+        .message-menu {
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            min-width: 160px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .menu-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .menu-item.danger {
+            color: #e74c3c;
+        }
+        
+        .menu-item.danger:hover {
+            background: #ffeaea;
+        }
+        
+        .menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+        }
+
+        .message .bubble.image-bubble {
+            background: rgba(15, 152, 179, 0.14) !important; 
+            border: 1px solid rgba(15, 152, 179, 0.22);
+            padding: 6px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .img-container { width: 220px; height: 220px; border-radius: 10px; overflow: hidden; background: white; }
+        .msg-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .chat-footer { padding: 15px; border-top: 1px solid #EEE; display: flex; gap: 12px; align-items: center; background: white; }
+        .chat-input { flex: 1; padding: 10px 15px; border-radius: 20px; border: none; background: #F1F3F4; outline: none; font-size: 14px; }
+        .footer-btn { background: none; border: none; color: var(--kehlot-teal); cursor: pointer; font-size: 1.3rem; transition: 0.2s; }
+        .footer-btn:hover { opacity: 0.8; }
+
+        /* Full-screen image modal */
+        #full-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            cursor: pointer;
+        }
+        
+        #full-overlay img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <div class="chat-container">
+        <header class="chat-header">
+            <button onclick="history.back()" style="background:none; border:none; color:white; font-size:1.2rem; margin-right:10px;"><i class="fa-solid fa-arrow-left"></i></button>
+            <div id="header-avatar-slot"></div>
+            <div class="header-info">
+                <div id="header-name" style="font-weight: 600;">Recipient Name</div>
+            </div>
+        </header>
+
+        <div id="chat-messages" class="chat-body"></div>
+
+        <footer class="chat-footer">
+            <button class="footer-btn" onclick="document.getElementById('fIn').click()">
+                <i class="fa-solid fa-paperclip"></i>
+            </button>
+            <input type="file" id="fIn" style="display:none" accept="image/jpeg,image/png,image/webp" onchange="ChatApp.handleUpload(event)">
+            
+            <input type="text" id="msg-input" class="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') ChatApp.sendMessage()" onpaste="ChatApp.handlePaste(event)">
+            
+            <button class="footer-btn" id="send-btn" onclick="ChatApp.sendMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </footer>
+    </div>
+</div>
+
+<div id="full-overlay" onclick="ChatApp.closeImageModal()">
+    <button class="close-btn" onclick="ChatApp.closeImageModal(); event.stopPropagation();">
+        <i class="fa-solid fa-times"></i>
+    </button>
+    <img id="overlay-img" src="">
+</div>
+
+<div class="menu-overlay" id="menu-overlay" onclick="ChatApp.hideMenu()"></div>
+
+<div class="message-menu" id="message-menu">
+    <div class="menu-item" id="copy-item" onclick="ChatApp.copyMessage()">
+        <i class="fa-regular fa-copy"></i>
+        Copy
+    </div>
+    <div class="menu-item" id="view-item" onclick="ChatApp.viewImage()" style="display: none;">
+        <i class="fa-regular fa-eye"></i>
+        View
+    </div>
+    <div class="menu-item danger" id="delete-item" onclick="ChatApp.deleteMessage()">
+        <i class="fa-regular fa-trash-can"></i>
+        Delete
+    </div>
+</div>
+
+<script>
+/**
+ * PROVIDER DATABASE (Shared with providers.html)
+ */
+const providerDatabase = [
+{ id: 1, name: "Dawit Mengistu", skill: "Plumbing", loc: "Bole", phone: "+251 911 370 518", email: "dawit@gmail.com", img: "../pic/Dawit.jpg", bio: "Specialist in modern building piping.", reviews: 42, stars: 4 },
+{ id: 2, name: "Selamawit Tadesse", skill: "Plumbing", loc: "Mexico", phone: "+251 912 975 048", email: "selam@gmail.com", img: "../pic/Selamawit.jpg", bio: "Detailed bathroom maintenance.", reviews: 15, stars: 3 },
+{ id: 3, name: "Yonas Gebre", skill: "Plumbing", loc: "Piassa", phone: "+251 912 375 548", email: "yonas@gmail.com", img: "../pic/Yonas.jpg", bio: "20 years of experience.", reviews: 88, stars: 5 },
+{ id: 4, name: "Mulugeta Bekele", skill: "Plumbing", loc: "Gerji", phone: "+251 921 275 358", email: "mulu@gmail.com", img: "../pic/Mulugeta.jpg", bio: "Fast emergency response.", reviews: 30, stars: 4 },
+{ id: 5, name: "Elias Haile", skill: "Electrical", loc: "Abado", phone: "+251 911 789 508", email: "elias@gmail.com", img: "../pic/Elias.jpg", bio: "Smart home wiring expert.", reviews: 120, stars: 5 },
+{ id: 6, name: "Helen Tesfaye", skill: "Electrical", loc: "Sarbet", phone: "+251 902 456 547", email: "helen@gmail.com", img: "../pic/Helen.jpg", bio: "Lighting design specialist.", reviews: 45, stars: 4 },
+{ id: 7, name: "Kidus Yoseph", skill: "Electrical", loc: "Summit", phone: "+251 924 123 548", email: "kidus@gmail.com", img: "../pic/Kidus.jpg", bio: "Industrial circuit breaker.", reviews: 10, stars: 3 },
+{ id: 8, name: "Saba Gidey", skill: "Electrical", loc: "Kazanchis", phone: "+251 932 375 548", email: "saba@gmail.com", img: "../pic/Saba.jpg", bio: "Appliance repair specialist.", reviews: 67, stars: 4 },
+{ id: 9, name: "Martha Alemu", skill: "Cleaning", loc: "Kara", phone: "+251 992 775 440", email: "martha@gmail.com", img: "../pic/Martha.jpg", bio: "Expert deep cleaning.", reviews: 156, stars: 4 },
+{ id: 10, name: "Solomon Zewde", skill: "Cleaning", loc: "Ayat", phone: "+251 902 075 544", email: "sol@gmail.com", img: "../pic/Solomon.jpg", bio: "Office janitorial services.", reviews: 90, stars: 5 },
+{ id: 11, name: "Rahel Belay", skill: "Cleaning", loc: "Old Airport", phone: "+251 926 395 543", email: "rahel@gmail.com", img: "../pic/Rahel.jpg", bio: "Post-event cleaning specialist.", reviews: 12, stars: 3 },
+{ id: 12, name: "Genet Kebede", skill: "Cleaning", loc: "Lebu", phone: "+251 962 575 548", email: "genet@gmail.com", img: "../pic/Genet.jpg", bio: "Eco-friendly cleaning.", reviews: 34, stars: 4 },
+{ id: 13, name: "Tilahun Gemechu", skill: "Carpentry", loc: "Merkato", phone: "+251 915 375 544", email: "ti@gmail.com", img: "../pic/Tilahun.jpg", bio: "Master of custom furniture.", reviews: 200, stars: 5 },
+{ id: 14, name: "Biniyam Jemberu", skill: "Carpentry", loc: "Kotebe", phone: "+251 916 775 545", email: "bini@gmail.com", img: "../pic/Biniam.jpg", bio: "Cabinet repair expert.", reviews: 50, stars: 4 },
+{ id: 15, name: "Eden Solomon", skill: "Carpentry", loc: "Wessen", phone: "+251 962 775 678", email: "eden@gmail.com", img: "../pic/Eden.png", bio: "Office workspace design.", reviews: 75, stars: 4 },
+{ id: 16, name: "Fasil Abera", skill: "Carpentry", loc: "Summit", phone: "+251 955 365 547", email: "fasil@gmail.com", img: "../pic/Fasil.jpg", bio: "Roofing and exterior wood.", reviews: 88, stars: 5 },
+{ id: 17, name: "Meron Isaac", skill: "Painting", loc: "Kality", phone: "+251 932 395 542", email: "meron@gmail.com", img: "../pic/Meron.jpg", bio: "Creative wall textures.", reviews: 67, stars: 4 },
+{ id: 18, name: "Abel Tesema", skill: "Painting", loc: "Addisu Gebeya", phone: "+251 943 395 548", email: "abel@gmail.com", img: "../pic/Abel.png", bio: "Fast apartment repainting.", reviews: 14, stars: 3 },
+{ id: 19, name: "Tsion Hailu", skill: "Painting", loc: "Megenagna", phone: "+251 932 335 241", email: "tsion@gmail.com", img: "../pic/Tsion.png", bio: "Exterior coating specialist.", reviews: 102, stars: 5 },
+{ id: 20, name: "Daniel Kassahun", skill: "Painting", loc: "Jemo", phone: "+251 912 345 679", email: "dan@gmail.com", img: "../pic/Daniel.png", bio: "Detailed trim painting.", reviews: 25, stars: 4 },
+{ id: 21, name: "Zelalem Walelegn", skill: "Mechanics", loc: "5 Kilo", phone: "+251 922 375 540", email: "zel@gmail.com", img: "../pic/zelalem.png", bio: "Master engine technician.", reviews: 500, stars: 5 },
+{ id: 22, name: "Bethlehem Tekel", skill: "Mechanics", loc: "Shiromeda", phone: "+251 917 305 558", email: "betty@gmail.com", img: "../pic/Bethlehem.jpg", bio: "Brake and gear expert.", reviews: 20, stars: 4 },
+{ id: 23, name: "Anteneh Mesay", skill: "Mechanics", loc: "22(ayahulet)", phone: "+251 912 375 548", email: "ant@gmail.com", img: "../pic/Anteneh.jpg", bio: "General car maintenance.", reviews: 80, stars: 5 },
+{ id: 24, name: "Lulit Abebe", skill: "Mechanics", loc: "CMC", phone: "+251 912 975 048", email: "lulit@gmail.com", img: "../pic/Lulit.jpg", bio: "Electrical car diagnostics.", reviews: 9, stars: 3 }
+];
+
+/**
+ * 1. NETWORK LAYER (MOCKED)
+ */
+const API_BASE = 'http://localhost:5000';
+
+// Socket.IO client (used for real-time messaging)
+const socket = (typeof io === 'function') ? io(API_BASE, { auth: { token: localStorage.getItem('authToken')||'' }, withCredentials: true }) : null;
+if (socket) {
+    socket.on('connect', () => {
+        console.log('socket connected', socket.id);
+        // join the user's room if we have a stored currentUser
+        try {
+            const cur = JSON.parse(localStorage.getItem('currentUser')||'null')||{};
+            const uid = cur.id || cur.userId || cur._id;
+            if (uid) socket.emit('join', String(uid));
+        } catch (e) { /* ignore */ }
+    });
+
+    socket.on('message:new', (m) => {
+        try {
+            // Append message to UI if it belongs to current conversation
+            const cid = ChatApp.recipient && (ChatApp.recipient.id || ChatApp.recipient.userId);
+            const curId = ChatApp.currentUser && (ChatApp.currentUser.id || ChatApp.currentUser.userId);
+            if (!cid || !curId) return;
+            const isRelevant = (String(m.senderId) === String(cid) && String(m.receiverId) === String(curId)) || (String(m.receiverId) === String(cid) && String(m.senderId) === String(curId));
+            if (isRelevant) {
+                const direction = String(m.senderId) === String(curId) ? 'sent' : 'received';
+                const el = ChatApp.renderMessage({ content: m.content || m.imageUrl || '', type: m.imageUrl ? 'image' : 'text', timestamp: m.createdAt || m.timestamp, senderId: m.senderId, id: m.id || m._id }, direction);
+                if (m.id || m._id) el.dataset.messageId = m.id || m._id;
+                ChatApp.lastMessageId = m.id || m._id || ChatApp.lastMessageId;
+            }
+        } catch (e) { console.warn('socket message:new handler error', e); }
+    });
+
+    socket.on('conversations:update', (payload) => {
+        // Optionally refresh conversation list or show a toast
+        console.log('conversations:update', payload);
+    });
+}
+const Network = {
+    async pushMessage(payload) {
+        await new Promise(res => setTimeout(res, 500));
+        if (Math.random() < 0.05) throw new Error("Sync Failed");
+        return { ...payload, messageId: 'msg_' + Date.now(), status: 'sent' };
+    },
+    async deleteMessage(messageId) {
+        await new Promise(res => setTimeout(res, 300));
+        return true;
+    },
+    async fetchMessages(conversationId) {
+        await new Promise(res => setTimeout(res, 200));
+        // Mock: return some messages
+        return [
+            { messageId: 'msg1', senderId: this.currentUser.id, content: "Hello!", type: 'text', timestamp: new Date(Date.now() - 60000).toISOString() },
+            { messageId: 'msg2', senderId: this.recipient.id, content: "Hi there!", type: 'text', timestamp: new Date(Date.now() - 30000).toISOString() }
+        ];
+    },
+    async pollNewMessages(lastMessageId) {
+        await new Promise(res => setTimeout(res, 1000));
+        // Mock: occasionally return a new message
+        return null;
+    }
+};
+
+/**
+ * 2. CHAT APP LOGIC
+ */
+const ChatApp = {
+    currentUser: { userId: 1, role: "user", name: "Seeker", profileImage: "" },
+    recipient: { userId: 2, role: "provider", name: "Provider", profileImage: "" },
+    activeMsg: null,
+    isProcessing: false,
+    lastMessageId: null,
+    pollingInterval: null,
+
+    init() {
+        // Clear chat input on init
+        document.getElementById('msg-input').value = '';
+        // If user returned from login with a pending selected provider, move it into localStorage so chat opens correctly
+        try {
+            const pending = sessionStorage.getItem('selectedProviderPending');
+            const cur = JSON.parse(localStorage.getItem('currentUser')||'null');
+            if (pending && cur && cur.id) {
+                try { localStorage.setItem('selectedProvider', pending); } catch(e){}
+                sessionStorage.removeItem('selectedProviderPending');
+            }
+        } catch (e) { /* ignore */ }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user');
+        const refId = urlParams.get('ref');
+
+        // Determine logged-in user
+        let me = null;
+        try { me = JSON.parse(localStorage.getItem('currentUser')||'null'); } catch(e){}
+
+        if (refId && userId) {
+            // We have a specific conversation context: Provider (refId) <-> User (userId)
+            
+            // Check if I am the provider
+            if (me && String(me.id) === String(refId)) {
+                this.currentUser = me;
+                this.recipient = { id: userId, role: 'user', name: 'User', profileImage: '' };
+                this.fetchRecipientDetails(userId, 'user');
+            } else {
+                // I am the seeker (or anonymous)
+                this.currentUser = me || { id: userId, role: "user", name: "Seeker", profileImage: "" };
+                
+                const prov = providerDatabase.find(p => String(p.id) === String(refId));
+                this.recipient = prov 
+                    ? { id: prov.id, role: "provider", name: prov.name, profileImage: prov.img }
+                    : { id: refId, role: "provider", name: "Provider", profileImage: "" };
+                
+                if (!prov) this.fetchRecipientDetails(refId, 'provider');
+            }
+        } else {
+            // Use localStorage
+            const selectedProvider = JSON.parse(localStorage.getItem('selectedProvider'));
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (selectedProvider) {
+                this.recipient = {
+                    id: selectedProvider.id,
+                    role: "provider",
+                    name: selectedProvider.name,
+                    profileImage: selectedProvider.img
+                };
+                this.currentUser = currentUser || { id: 1, role: "user", name: "Seeker", profileImage: "" };
+            } else {
+                // Mock
+                this.currentUser = { id: 1, role: "provider", name: "Elias Haile", profileImage: "https://via.placeholder.com/150" };
+                this.recipient = { id: 2, role: "user", name: "Mulu Tekle", profileImage: "" };
+            }
+        }
+
+        document.getElementById('header-avatar-slot').innerHTML = this.getAvatarMarkup(this.recipient);
+        document.getElementById('header-name').textContent = this.recipient.name;
+
+        // Load messages (from backend when available)
+        this.loadMessages();
+        
+        // Start polling
+        this.startPolling();
+        
+        // If socket exists, join the user's room now that currentUser is known
+        try {
+            if (typeof socket !== 'undefined' && socket && socket.connected) {
+                const uid = this.currentUser && (this.currentUser.id || this.currentUser.userId || this.currentUser._id);
+                if (uid) socket.emit('join', String(uid));
+            }
+        } catch (e) { /* ignore */ }
+
+        // If there is a prefilled message saved by the providerdetail page, populate the input
+        try {
+            const pre = sessionStorage.getItem('prefillMessage');
+            if (pre) {
+                const p = JSON.parse(pre);
+                // Only prefill if the current recipient matches the intended receiver or if no conflict
+                const intendedReceiver = p && (p.receiverUserId || p.receiverId || null);
+                if (!intendedReceiver || String(intendedReceiver) === String(this.recipient.id) || String(intendedReceiver) === String(this.recipient.userId)) {
+                    if (p.text) document.getElementById('msg-input').value = p.text;
+                    if (p.image) {
+                        // auto-send image immediately
+                        this.initiateMessage(p.image, 'image');
+                    }
+                }
+                sessionStorage.removeItem('prefillMessage');
+            }
+        } catch (e) { /* ignore parse errors */ }
+    },
+
+    async fetchRecipientDetails(id, type) {
+        try {
+            const endpoint = type === 'provider' ? `/api/provider/${id}` : `/api/users/${id}`;
+            const res = await fetch(`${API_BASE}${endpoint}`);
+            if (res.ok) {
+                const data = await res.json();
+                const name = data.fullName || data.name || (type === 'provider' ? 'Provider' : 'User');
+                const img = data.profileImage || data.image || '';
+                this.recipient.name = name;
+                if (img) this.recipient.profileImage = img;
+                document.getElementById('header-name').textContent = name;
+                document.getElementById('header-avatar-slot').innerHTML = this.getAvatarMarkup(this.recipient);
+            }
+        } catch (e) { console.warn('Failed to fetch recipient details', e); }
+    },
+
+    getAvatarMarkup(user) {
+        if (user.profileImage) {
+            return `<div class="avatar-circle"><img src="${user.profileImage}" alt="${user.name}" onerror="this.style.display='none';" /></div>`;
+        }
+        return `<div class="avatar-circle"></div>`;
+    },
+
+    async loadMessages() {
+        try {
+            // If authenticated, try to load from backend API first
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            if (token) {
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    headers['Authorization'] = `Bearer ${token}`;
+                    // Load thread with the recipient
+                    const threadId = this.recipient.id;
+                    if (threadId) {
+                        const res = await fetch(`${API_BASE}/api/messages/thread/${encodeURIComponent(threadId)}`, { credentials: 'include', headers });
+                        const payload = await res.json().catch(()=>({}));
+                        const msgs = (res.ok && payload && Array.isArray(payload.data)) ? payload.data : [];
+                        msgs.forEach(m => {
+                            const direction = String(m.senderId) === String(this.currentUser.id) ? 'sent' : 'received';
+                            const el = this.renderMessage({ content: m.content || m.imageUrl || '', type: m.imageUrl ? 'image' : 'text', timestamp: m.createdAt || m.timestamp, senderId: m.senderId, id: m.id || m._id }, direction);
+                            if (m.id||m._id) el.dataset.messageId = m.id||m._id;
+                            this.lastMessageId = m.id || m._id || this.lastMessageId;
+                        });
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Failed loading thread from server', e);
+                }
+            }
+
+            // Fallback to localStorage
+            const chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+            const messages = chatHistory.filter(m => m.providerId == this.recipient.id);
+            messages.forEach(msg => {
+                const direction = String(msg.senderId) === String(this.currentUser.id) ? 'sent' : 'received';
+                const el = this.renderMessage({ content: msg.content, type: msg.type, timestamp: msg.timestamp, senderId: msg.senderId, id: msg.id || msg.messageId }, direction);
+                if (msg.id || msg.messageId) el.dataset.messageId = msg.id || msg.messageId;
+            });
+            if (messages.length > 0) {
+                this.lastMessageId = messages[messages.length - 1].id || messages[messages.length - 1].messageId;
+            }
+        } catch (err) {
+            console.error("Failed to load messages:", err);
+        }
+    },
+
+    startPolling() {
+        this.pollingInterval = setInterval(async () => {
+            try {
+                const newMsg = await Network.pollNewMessages(this.lastMessageId);
+                if (newMsg) {
+                    const el = this.renderMessage(newMsg, 'received');
+                    el.dataset.messageId = newMsg.messageId;
+                    this.lastMessageId = newMsg.messageId;
+                }
+            } catch (err) {
+                console.error("Polling error:", err);
+            }
+        }, 3000); // Poll every 3 seconds
+    },
+
+    // --- UPLOAD & SEND ---
+
+    async handleUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Strict Validation
+        const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type)) return alert("Format not supported.");
+        if (file.size > 5 * 1024 * 1024) return alert("Max size 5MB.");
+
+        const reader = new FileReader();
+        reader.onload = (f) => this.initiateMessage(f.target.result, "image");
+        reader.readAsDataURL(file);
+        e.target.value = ""; 
+    },
+
+    async sendMessage() {
+        if (this.isProcessing) return;
+        const input = document.getElementById('msg-input');
+        const text = input.value.trim();
+        if (!text) return;
+        
+        input.value = '';
+        await this.initiateMessage(text, "text");
+    },
+
+    handlePaste(e) {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const blob = items[i].getAsFile();
+                this.handlePastedImage(blob);
+                return;
+            }
+        }
+    },
+
+    handlePastedImage(blob) {
+        const reader = new FileReader();
+        reader.onload = (f) => this.initiateMessage(f.target.result, "image");
+        reader.readAsDataURL(blob);
+    },
+
+    async initiateMessage(content, type) {
+        this.isProcessing = true;
+        const payload = {
+            senderId: this.currentUser.id,
+            providerId: this.recipient.id,
+            type: type,
+            content: content,
+            timestamp: new Date().toISOString(),
+            id: 'msg_' + Date.now()
+        };
+
+        try {
+            // Render optimistically
+            const el = this.renderMessage(payload, "sent");
+            el.dataset.messageId = payload.id;
+            this.lastMessageId = payload.id;
+
+            // If authenticated, send using websocket if available (fallback to REST)
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            if (token) {
+                try {
+                    // Normalize ids: prefer numeric ids when possible
+                    const normalizeId = (v) => {
+                        if (v === null || typeof v === 'undefined') return v;
+                        if (typeof v === 'number') return v;
+                        const s = String(v).trim();
+                        if (/^\d+$/.test(s)) return Number(s);
+                        return s;
+                    };
+
+                    const receiverNorm = normalizeId(this.recipient.id || this.recipient.userId || this.recipient);
+                    const senderNorm = normalizeId(this.currentUser.id || this.currentUser.userId || this.currentUser);
+
+                    const socketPayload = {
+                        // Do not include client-supplied senderId; server derives sender from socket auth.
+                        receiverId: receiverNorm,
+                        content: type === 'text' ? content : undefined,
+                        imageUrl: type === 'image' ? content : undefined
+                    };
+
+                    console.debug('message send', { sender: senderNorm, receiver: receiverNorm, type });
+
+                    if (socket && socket.connected) {
+                        socket.emit('message:send', socketPayload, (ack) => {
+                            if (ack && ack.success && ack.data) {
+                                el.dataset.messageId = ack.data.id || ack.data._id || el.dataset.messageId;
+                            } else {
+                                console.warn('socket emit returned error', ack);
+                            }
+                        });
+                    } else {
+                        // Fallback to REST POST when socket not connected
+                        try {
+                            const headers = { 'Content-Type': 'application/json' };
+                            headers['Authorization'] = `Bearer ${token}`;
+                            const body = { receiverId: receiverNorm, content: type === 'text' ? content : undefined };
+                            if (type === 'image') body.imageUrl = content;
+                            const res = await fetch(`${API_BASE}/api/messages/`, { method: 'POST', credentials: 'include', headers, body: JSON.stringify(body) });
+                            const resp = await res.json().catch(()=>({}));
+                            if (res.ok && resp && resp.data) {
+                                el.dataset.messageId = resp.data.id || resp.data._id || el.dataset.messageId;
+                            } else {
+                                console.warn('Message POST failed', resp);
+                            }
+                        } catch (e) { console.warn('send message failed', e); }
+                    }
+                } catch (e) { console.warn('send message failed', e); }
+            } else {
+                // Save to localStorage for fallback behavior
+                const chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+                chatHistory.push(payload);
+                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+            }
+        } catch (err) {
+            console.error("initiateMessage error", err);
+        } finally {
+            this.isProcessing = false;
+        }
+    },
+
+    // --- RENDERING (Original Styling Restored) ---
+
+    renderMessage(msgData, direction) {
+        const viewport = document.getElementById('chat-messages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${direction}`;
+        msgDiv.dataset.senderId = msgData.senderId;
+        
+        msgDiv.onclick = (e) => {
+            e.stopPropagation();
+            const isImage = msgData.type === 'image';
+            this.showMenu(e, isImage ? 'image' : 'text', msgDiv);
+        };
+
+        // Add avatar
+        if (direction === 'received') {
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar-circle';
+            avatar.innerHTML = this.getAvatarMarkup(this.recipient);
+            msgDiv.appendChild(avatar);
+        }
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+
+        if (msgData.type === 'text') {
+            bubble.textContent = msgData.content;
+        } else {
+            // RESTORED ORIGINAL IMAGE HOLDER STRUCTURE
+            bubble.classList.add("image-bubble");
+            bubble.innerHTML = `<div class="img-container"><img src="${msgData.content}" class="msg-image"></div>`;
+        }
+
+        // Attach message id to DOM for later deletion
+        msgDiv.dataset.messageId = msgData.id || msgData.messageId || '';
+
+        msgDiv.appendChild(bubble);
+
+        viewport.appendChild(msgDiv);
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+        return msgDiv;
+    },
+
+    // --- MENU & ACTIONS ---
+
+    showMenu(e, type, el) {
+        e.stopPropagation();
+        this.activeMsg = el;
+        const menu = document.getElementById('message-menu');
+        const overlay = document.getElementById('menu-overlay');
+        
+        // Position the menu near the clicked message
+        const rect = el.getBoundingClientRect();
+        const menuWidth = 160;
+        const menuHeight = 120; // Approximate height
+        
+        let left = e.clientX - (menuWidth / 2);
+        let top = rect.top - menuHeight - 10;
+        
+        // Ensure menu stays within viewport
+        left = Math.max(10, Math.min(left, window.innerWidth - menuWidth - 10));
+        top = Math.max(10, Math.min(top, window.innerHeight - menuHeight - 10));
+        
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        menu.style.display = 'block';
+        overlay.style.display = 'block';
+        
+        // Show/hide options based on message type and sender
+        const isSender = String(el.dataset.senderId) === String(this.currentUser.id);
+        document.getElementById('delete-item').style.display = isSender ? 'flex' : 'none';
+        document.getElementById('view-item').style.display = (type === 'image') ? 'flex' : 'none';
+    },
+
+    async deleteMessage(messageId, btn) {
+        // Determine DOM target and message id
+        const msgDiv = this.activeMsg;
+        if (!msgDiv) return;
+        if (!messageId) messageId = msgDiv.dataset.messageId || '';
+        // If no btn supplied, attempt to find active menu
+        const target = msgDiv;
+        // Animate out and remove DOM
+        target.style.transform = "scale(0.9)";
+        target.style.opacity = "0";
+        setTimeout(() => target.remove(), 300);
+
+        // Attempt server-side delete if possible
+        try {
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            await fetch(`${API_BASE}/api/messages/${encodeURIComponent(messageId)}`, { method: 'DELETE', credentials: 'include', headers }).catch(()=>{});
+        } catch (err) { console.warn('server delete failed', err); }
+
+        // Remove from localStorage by matching id or messageId
+        try {
+            const chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+            const filtered = chatHistory.filter(m => {
+                const mid = m.id || m.messageId || '';
+                return !(mid && mid == messageId);
+            });
+            localStorage.setItem('chatHistory', JSON.stringify(filtered));
+        } catch (err) {
+            console.error("Error removing message:", err);
+        }
+        // Close any menus
+        this.hideMenu();
+    },
+
+    copyMessage() {
+        if (!this.activeMsg) return;
+        const bubble = this.activeMsg.querySelector('.bubble');
+        
+        if (bubble.querySelector('img')) {
+            // Copy actual image data
+            const imgSrc = bubble.querySelector('img').src;
+            this.copyImageToClipboard(imgSrc);
+        } else {
+            // Copy text
+            const text = bubble.textContent || bubble.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                this.showToast('Message copied!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                this.showToast('Failed to copy');
+            });
+        }
+        
+        // If server supports copy endpoint, try to call it
+        (async ()=>{
+            try {
+                const mid = this.activeMsg.dataset.messageId;
+                const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                if (mid) {
+                    await fetch(`${API_BASE}/api/messages/${encodeURIComponent(mid)}/copy`, { method: 'POST', credentials: 'include', headers }).catch(()=>{});
+                }
+            } catch(e){ console.warn('copy endpoint failed', e); }
+        })();
+
+        this.hideMenu();
+    },
+
+    async copyImageToClipboard(imageSrc) {
+        try {
+            let blob;
+            if (imageSrc.startsWith('data:')) {
+                // Handle data URL directly
+                const [mime, base64] = imageSrc.split(',');
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                blob = new Blob([byteArray], { type: mime.split(':')[1].split(';')[0] });
+            } else {
+                // Fetch external image
+                const response = await fetch(imageSrc);
+                blob = await response.blob();
+            }
+            const item = new ClipboardItem({ [blob.type]: blob });
+            await navigator.clipboard.write([item]);
+            this.showToast('Image copied!');
+        } catch (err) {
+            console.error('Failed to copy image: ', err);
+            this.showToast('Image copy not supported in this browser');
+        }
+    },
+
+    viewImage() {
+        if (!this.activeMsg) return;
+        const img = this.activeMsg.querySelector('img');
+        if (img) {
+            document.getElementById('overlay-img').src = img.src;
+            document.getElementById('full-overlay').style.display = 'flex';
+            // Add ESC key listener
+            document.addEventListener('keydown', this.handleImageModalKey);
+        }
+        this.hideMenu();
+    },
+
+    closeImageModal() {
+        document.getElementById('full-overlay').style.display = 'none';
+        document.removeEventListener('keydown', this.handleImageModalKey);
+    },
+
+    handleImageModalKey(e) {
+        if (e.key === 'Escape') {
+            ChatApp.closeImageModal();
+        }
+    },
+
+    showToast(message) {
+        // Create a simple toast notification
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 10000;
+            pointer-events: none;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    },
+
+    hideMenu() { 
+        document.getElementById('message-menu').style.display = 'none'; 
+        document.getElementById('menu-overlay').style.display = 'none';
+        this.activeMsg = null; 
+    }
+};
+
+window.onclick = () => ChatApp.hideMenu();
+ChatApp.init();
+</script>
+
+</body>
+</html>

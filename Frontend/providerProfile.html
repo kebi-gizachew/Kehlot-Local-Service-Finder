@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kehlot | Provider Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0FB7C2;
+            --bg-light: #F9FAFB;
+            --text-dark: #111827;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+            --danger: #EF4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); }
+        .hidden { display: none !important; }
+
+        header { background: white; padding: 15px 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; }
+        .brand-logo-img { height: 45px; width: auto; border-radius: 4px; }
+        .brand-name { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+        .page-container { max-width: 650px; margin: 40px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 24px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .profile-banner { background: var(--primary); height: 110px; }
+        .profile-main { text-align: center; margin-top: -55px; padding: 0 40px 40px; }
+        .profile-img { width: 120px; height: 120px; border-radius: 24px; border: 6px solid white; object-fit: cover; background: #eee; }
+        .about-box { background: #F9FAFB; border: 1px solid #F3F4F6; border-radius: 20px; padding: 24px; text-align: left; margin: 25px 0; }
+        .about-box h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; color: var(--text-dark); }
+        .about-box p { color: #4B5563; line-height: 1.6; font-size: 14px; }
+        .contact-info { text-align: left; margin: 20px 0 30px; display: flex; flex-direction: column; gap: 15px; padding-left: 10px; }
+        .contact-item { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 14px; }
+        .contact-item i { color: var(--primary); width: 18px; text-align: center; }
+
+        .pw-card { padding: 40px; border-radius: 30px; }
+        .input-group { margin-bottom: 18px; text-align: left; }
+        .input-group label { display: block; font-weight: 500; font-size: 14px; margin-bottom: 8px; }
+        .input-wrapper { position: relative; }
+        .input-wrapper i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .input-wrapper input { width: 100%; padding: 14px 16px 14px 44px; border-radius: 12px; border: 1px solid #E5E7EB; outline: none; font-size: 14px; }
+        .btn-update-pw { width: 100%; padding: 16px; border-radius: 14px; background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer; font-size: 15px; margin-top: 10px; }
+
+        .rating { color: #FFC107; font-size: 18px; margin-bottom: 20px; }
+        .rating span { color: var(--text-muted); font-size: 14px; margin-left: 5px; }
+
+        .user-initial-avatar {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: #F3F4F6; color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px; flex-shrink: 0;
+            border: 1px solid var(--border);
+        }
+
+        /* Lightweight feedback banner (mirrors providers page) */
+        .ui-feedback-banner { position: fixed; top: 80px; right: 20px; padding: 12px 18px; border-radius: 10px; display: none; color: white; z-index: 7000; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        .bg-success { background: linear-gradient(90deg,#16a34a,#059669); }
+        .bg-error { background: linear-gradient(90deg,#ef4444,#f97316); }
+
+        /* small helpers used by this page */
+        .actions { display:flex; gap:12px; margin-top:16px; }
+        .btn { flex:1; padding:12px; border-radius:12px; border:none; font-weight:700; cursor:pointer; font-size:15px }
+        .btn-outline { background:transparent; border:2px solid var(--primary); color:var(--primary) }
+        .btn-primary { background:var(--primary); color:white }
+        .link-pw { margin-top:20px; color:var(--text-muted); font-size:13px; text-decoration:underline; cursor:pointer }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <img src="./images/logo.jpg" alt="Kehlot Logo" class="brand-logo-img" onerror="this.style.display='none';">
+        <span class="brand-name">Kehlot</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:20px;">
+        <div id="nav-provider-name" style="font-size: 14px;"><i class="fa-regular fa-circle-user"></i> <span id="nav-name">Loading...</span></div>
+        <div style="cursor:pointer; font-weight:700; font-size: 14px;" onclick="toggleLogout(true)">Logout</div>
+    </div>
+</header>
+
+<div id="logout-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;z-index:999;display:none;">
+    <div style="background:white;padding:28px;border-radius:16px;text-align:center;max-width:360px;width:90%">
+        <div style="font-size:34px;color:#F84C4C;margin-bottom:8px"><i class="fa-solid fa-right-from-bracket"></i></div>
+        <h3 style="margin-bottom:6px">Confirm Logout</h3>
+        <p class="muted">Are you sure you want to log out?</p>
+        <div style="display:flex;gap:10px;margin-top:18px">
+            <button class="btn" style="flex:1;background:#F3F4F6" onclick="toggleLogout(false)">Cancel</button>
+            <button class="btn btn-primary" style="flex:1" onclick="performLogout()">Logout</button>
+        </div>
+    </div>
+</div>
+
+<main class="page-container">
+    <div id="profile-view" class="card">
+        <div class="profile-banner"></div>
+        <div class="profile-main">
+            <img id="photo" class="profile-img" src="pic/default-avatar.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Provider&background=random'">
+            <h1 id="name" style="margin-top:15px; font-size: 24px; font-weight: 700;">Provider Name</h1>
+            <p id="skill" style="color:var(--text-muted); font-size: 14px; margin-bottom: 8px;">Service / Skill</p>
+            <div style="margin-top:8px; margin-bottom:12px;">
+                <div id="avgRatingDisplay" style="font-weight:700; color: #111827; margin-bottom:8px;">-</div>
+            </div>
+
+            <div class="about-box" id="bio-container">
+                <h3>Bio</h3>
+                <p id="display-bio">No bio available.</p>
+            </div>
+
+            <div class="contact-info">
+                <div class="contact-item"><i class="fa-solid fa-location-dot"></i> <span id="display-loc">---</span></div>
+                <div class="contact-item"><i class="fa-solid fa-phone"></i> <span id="display-phone">---</span></div>
+                <div class="contact-item"><i class="fa-solid fa-envelope"></i> <span id="display-email">---</span></div>
+            </div>
+
+            <div style="display:flex; gap:12px; align-items:center; justify-content:center; margin-top:16px; width:100%;">
+                <button id="msgBtn" type="button" style="width:100%; padding:14px; border-radius:12px; border:2px solid var(--primary); background:transparent; color:var(--primary); font-weight:700; cursor:pointer; font-size:15px;" >
+                    <i class="fa-regular fa-comment-dots"></i> View Recent Messages
+                </button>
+            </div>
+
+            <button id="change-pw-link" class="link-pw" style="background:transparent;border:none;padding:0;margin-top:20px;cursor:pointer;color:var(--text-muted);font-size:13px;text-decoration:underline;">Change Password</button>
+        </div>
+    </div>
+    
+
+</main>
+
+<script>
+    const API_BASE = 'http://localhost:5000';
+    document.addEventListener('DOMContentLoaded', init);
+    function toggleLogout(show){document.getElementById('logout-overlay').style.display = show ? 'flex' : 'none'}
+    
+    const providerDatabase = [
+    ];
+
+    async function performLogout(){
+        try{
+            // determine role to pass to logout endpoint
+            const current = JSON.parse(localStorage.getItem('currentUser')||'null')||{};
+            const role = current.role || current.userRole || 'PROVIDER';
+            // call backend logout so it can clear cookies for the role
+            await fetch(`${API_BASE}/api/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role })
+            }).catch(()=>{});
+        }catch(e){console.warn('logout request failed', e)}
+        // client-side cleanup
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('authToken');
+        // hide overlay and redirect
+        toggleLogout(false);
+        window.location.href='homepage.html';
+    }
+
+    // (removed header message link for this page — use 'View Recent Messages' button below)
+
+    async function init(){
+        const params = new URLSearchParams(window.location.search);
+        // Robustly resolve provider id from querystring or localStorage/currentUser or other known fields
+        const storageUser = JSON.parse(localStorage.getItem('currentUser')||'null')||{};
+        function extractId(obj){
+            if(!obj) return null;
+            return obj.providerId || obj.provider || obj.id || obj._id || obj.serviceProviderId || obj.userId || (obj.user&&obj.user.id) || null;
+        }
+        const providerId = params.get('provider') || params.get('id') || extractId(storageUser);
+        // show name from storage (often minimal) while we load full profile
+        document.getElementById('nav-name').textContent = storageUser.name || storageUser.fullName || storageUser.username || 'Provider';
+        
+        // Attach listeners immediately
+        document.getElementById('msgBtn').onclick = async ()=> { 
+            if(!providerId) return alert('Provider ID not found. Please log in.');
+            // prefetch provider messages (server accepts either userId or serviceProviderId)
+            try {
+                const messages = await fetchMessagesForProvider(providerId).catch(()=>null);
+                if (messages && messages.success) {
+                    try { sessionStorage.setItem(`providerMessages_${providerId}`, JSON.stringify(messages.data)); } catch(e){}
+                }
+            } catch(e) { console.warn('Prefetch messages failed', e); }
+            window.location.href = `providers/messages.html?provider=${encodeURIComponent(providerId)}`; 
+        };
+        document.getElementById('change-pw-link').onclick = ()=> { 
+            if(!providerId) return alert('Provider ID not found. Please log in.');
+            window.location.href = `providers/change-password.html?provider=${encodeURIComponent(providerId)}`; 
+        };
+
+        if(!providerId){console.warn('No provider id available');return}
+
+        console.log('providerProfile:init - resolved providerId=', providerId);
+        const prov = await fetchProvider(providerId);
+        if(prov){
+            console.log('providerProfile:init - provider fetched', prov);
+            render(prov);
+        } else {
+            console.warn('providerProfile:init - provider not found for id', providerId);
+        }
+    }
+
+    async function fetchProvider(id){
+        if (!id) return null;
+
+        try{
+            // try session cache first
+            const cached = JSON.parse(sessionStorage.getItem('providersCache')||'null');
+            if(Array.isArray(cached)){
+                const found = cached.find(x=>String(x.serviceId)===String(id)||String(x.id)===String(id)||String(x._id)===String(id));
+                if(found) return found;
+            }
+        }catch(e){}
+
+        try{
+            const res = await fetch(`${API_BASE}/api/provider/${encodeURIComponent(id)}`,{credentials:'include'});
+            if(res.ok){
+                const b = await res.json().catch(()=>({}));
+                
+                // Check if response contains actual provider details
+                const looksLikeProvider = Boolean(b.serviceType || b.skill || b.service || b.location || b.loc || b.profileImage || b.img || b.bio);
+                
+                if(looksLikeProvider){
+                    // Normalization from providerdetail.html
+                    const prov = {
+                        serviceId: b.serviceProviderId || b.id || b._id || b.providerId || null,
+                        id: b.serviceProviderId || b.id || b._id || b.providerId || null,
+                        name: b.fullName || b.name || b.user?.fullName || '',
+                        skill: b.serviceType || b.skill || b.service || '',
+                        loc: b.location || b.loc || b.address || '',
+                        phone: b.phone || b.phoneNumber || b.contact || b.mobile || '',
+                        email: b.email || b.user?.email || '',
+                        img: b.profileImage || b.img || b.image || 'pic/default-avatar.jpg',
+                        bio: b.bio || b.description || '',
+                        averageRating: (typeof b.averageRating !== 'undefined' && b.averageRating !== null) ? Number(b.averageRating) : null,
+                        stars: b.averageRating ? Math.round(b.averageRating) : (b.stars || 0),
+                        reviews: b.ratingCount || (Array.isArray(b.ratings) ? b.ratings.length : (b.reviews || 0))
+                    };
+                    prov.id = prov.serviceId || prov.id || Date.now();
+                    return prov;
+                }
+            }
+
+            // List Fallback (if 404 or error)
+            const listRes = await fetch(`${API_BASE}/api/provider/`, { credentials: 'include' });
+            if (listRes.ok) {
+                const listBody = await listRes.json().catch(()=>({}));
+                const list = listBody.data || listBody.providers || listBody || [];
+                const found = Array.isArray(list) ? list.find(x => String(x.id) === String(id) || String(x._id) === String(id) || String(x.providerId) === String(id) || String(x.serviceProviderId) === String(id) || String(x.userId) === String(id) || String(x.serviceId) === String(id)) : null;
+                if (found) {
+                    const out = {
+                        serviceId: found.id || found._id || found.providerId || found.serviceProviderId || null,
+                        id: found.id || found._id || found.providerId || Date.now(),
+                        name: found.fullName || found.name || found.user?.fullName || '',
+                        skill: found.serviceType || found.skill || found.service || '',
+                        loc: found.location || found.loc || found.address || '',
+                        phone: found.phone || found.contact || '',
+                        email: found.email || found.user?.email || '',
+                        img: found.profileImage || found.img || found.image || 'pic/default-avatar.jpg',
+                        bio: found.bio || found.description || '',
+                        averageRating: (typeof found.averageRating !== 'undefined' && found.averageRating !== null) ? Number(found.averageRating) : null,
+                        stars: found.averageRating ? Math.round(found.averageRating) : (found.stars || 0),
+                        reviews: Array.isArray(found.ratings) ? found.ratings.length : (found.reviews || 0)
+                    };
+                    out.id = out.serviceId || out.id;
+                    return out;
+                }
+            }
+        }catch(e){console.warn(e)}
+
+        // Local Database Fallback
+        const local = providerDatabase.find(p => String(p.id) === String(id));
+        if(local) return local;
+
+        // fallback to localStorage user
+        const u = JSON.parse(localStorage.getItem('currentUser')||'null')||{};
+        if (u && (String(u.id) === String(id) || !id)) {
+            return {
+                id: u.id,
+                name: u.name || u.fullName || 'Provider',
+                skill: u.skill || u.serviceType || 'Service Provider',
+                loc: u.loc || u.location || 'Location not set',
+                phone: u.phone || u.mobile || '',
+                email: u.email || '',
+                img: u.profileImage || u.img || 'pic/default-avatar.jpg',
+                bio: u.bio || '',
+                averageRating: u.averageRating || null,
+                reviews: u.reviews || 0
+            };
+        }
+        return null;
+    }
+
+    // Fetch messages for a provider (accepts either ServiceProvider.id or User.id)
+    async function fetchMessagesForProvider(providerId) {
+        if (!providerId) return { success: false, message: 'providerId required' };
+        try {
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(`${API_BASE}/api/messages/${encodeURIComponent(providerId)}`, { headers, credentials: 'include' });
+            const body = await res.json().catch(()=>({}));
+            if (!res.ok) return { success: false, status: res.status, body };
+            return { success: true, data: body.data || body };
+        } catch (e) {
+            console.error('fetchMessagesForProvider error', e);
+            return { success: false, message: e.message };
+        }
+    }
+
+    function render(p){
+        document.getElementById('name').textContent = p.name;
+        document.getElementById('skill').textContent = p.skill;
+        document.getElementById('nav-name').textContent = p.name;
+        
+        // Logic from providerdetail.html renderProviderProfile
+        document.getElementById('photo').src = p.img;
+
+        // bio and contact
+        try { document.getElementById('display-bio').textContent = p.bio || 'No bio available.'; } catch(e) {}
+        try { document.getElementById('display-loc').textContent = p.loc || 'Location not set'; } catch(e) {}
+        try { document.getElementById('display-phone').textContent = p.phone || '---'; } catch(e) {}
+        try { document.getElementById('display-email').textContent = p.email || '---'; } catch(e) {}
+
+        // average rating: show stars and numeric value
+        try {
+            const container = document.getElementById('avgRatingDisplay');
+            const avgNum = p.averageRating;
+            const reviews = p.reviews;
+            if (avgNum === null || typeof avgNum === 'undefined') {
+                container.textContent = '-';
+            } else {
+                const rounded = Math.round(avgNum);
+                const filled = '★'.repeat(Math.min(5, rounded));
+                const empty = '☆'.repeat(Math.max(0, 5 - Math.min(5, rounded)));
+                container.innerHTML = `<span style="color:#FFC107">${filled}${empty}</span> <span style="color:var(--text-muted); font-size:13px; margin-left:6px">${Number(avgNum).toFixed(1)} (${reviews})</span>`;
+            }
+        } catch(e) { console.warn('rating render failed', e); }
+    }
+
+    // helper used above
+    function storageFallbackName(){
+        try{ const u = JSON.parse(localStorage.getItem('currentUser')||'null')||{}; return u.name||u.fullName||u.username||null }catch(e){return null}
+
+    }
+
+    async function safeText(res){
+        try{ const t = await res.text(); return t.slice(0,200); }catch(e){return ''}
+    }
+
+    
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehlot | Admin Executive Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { 
+                        kihlot: { 
+                            primary: '#0F98B3', 
+                            hover: '#0d8199',
+                            light: 'rgba(15, 152, 179, 0.1)',
+                            bg: '#f4f7fe'
+                        } 
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f7fe; color: #1b2559; overflow-x: hidden; }
+        .glass-card { background: white; border-radius: 20px; box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12); border: none; }
+        .nav-link.active { color: #1b2559; border-right: 4px solid #0F98B3; font-weight: 800; background: linear-gradient(90deg, rgba(15, 152, 179, 0.1) 0%, rgba(15, 152, 179, 0) 100%); }
+        .page-view { display: none; animation: fadeIn 0.3s ease; }
+        .page-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        input, select, textarea { 
+            border: 1px solid #e0e5f2 !important; 
+            border-radius: 14px !important; 
+            padding: 14px 18px !important; 
+            background-color: #f8fafc !important; 
+            width: 100%; 
+            font-weight: 500; 
+            color: #1b2559; 
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus { border-color: #0F98B3 !important; outline: none; background-color: #ffffff !important; box-shadow: 0 0 0 4px rgba(15, 152, 179, 0.1); }
+        input.invalid { 
+            border-color: #ef4444 !important; 
+            background-color: #fffafb !important; 
+        }
+        label { font-size: 11px; font-weight: 800; margin-bottom: 8px; display: block; color: #a3b1cc; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; }
+        .toast { min-width: 300px; padding: 16px 20px; border-radius: 12px; margin-bottom: 12px; color: white; font-weight: 600; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: 0.3s ease; }
+        .toast-close { background: rgba(255,255,255,0.12); border-radius: 999px; padding: 6px 8px; display: inline-flex; align-items: center; justify-content: center; border: none; color: white; cursor: pointer; font-weight: 800; }
+        .toast-close:hover { background: rgba(255,255,255,0.18); }
+        
+        button:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .user-table th { text-align: left; color: #a3b1cc; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 15px; border-bottom: 1px solid #e0e5f2; }
+        .user-table td { padding: 15px; border-bottom: 1px solid #f4f7fe; font-weight: 700; font-size: 14px; }
+    </style>
+</head>
+<body class="flex">
+
+    <div id="login-gate" class="fixed inset-0 bg-kihlot-bg z-[100] flex items-center justify-center p-6">
+        <div class="absolute left-6 top-6">
+            <a href="homepage.html" class="inline-flex items-center gap-2 text-slate-500 hover:text-kihlot-primary font-semibold bg-white px-3 py-2 rounded-lg shadow-sm">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to site
+            </a>
+        </div>
+        <div class="glass-card p-10 w-full max-w-md shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-kihlot-primary rounded-2xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4 hover:scale-105 transition-transform">
+                    <img src="./images/logo.jpg" alt="Kehlot Logo" class="w-full h-full rounded-2xl object-cover">
+                </div>
+                <h2 class="text-2xl font-black">Executive Login</h2>
+                <p class="text-slate-400 text-sm">Access the Kehlot Command Center</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label>Admin Email</label>
+                    <input type="email" id="adminEmail" placeholder="admin@kehlot.com" autocomplete="off" required>
+                </div>
+                <div>
+                    <label>Access Password</label>
+                    <input type="password" id="adminPass" placeholder="••••••••" autocomplete="new-password" required>
+                </div>
+                <button type="submit" class="w-full py-4 bg-kihlot-primary text-white rounded-2xl font-bold hover:bg-kihlot-hover transition-all mt-2">
+                    Verify & Authenticate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <aside id="main-sidebar" class="hidden fixed left-0 top-0 h-screen w-72 bg-white p-8 flex flex-col z-50 shadow-sm">
+        <div class="flex items-center gap-3 mb-12 px-4 group">
+            <img src="./images/logo.jpg" alt="Kehlot Logo" class="w-10 h-10 rounded-xl object-cover group-hover:rotate-6 transition-transform">
+            <h1 class="text-2xl font-extrabold tracking-tight">Kehlot<span class="text-kihlot-primary">.</span></h1>
+        </div>
+        <nav class="flex-1 space-y-4">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Management</p>
+            <button onclick="showPage('overview')" id="nav-overview" class="nav-link active w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </button>
+            <button onclick="prepareAddMode()" id="nav-add" class="nav-link w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-user-plus"></i> Add Provider
+            </button>
+            <button onclick="showPage('edit')" id="nav-edit" class="nav-link w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-list-check"></i> Manage Directory
+            </button>
+            <button onclick="showPage('users')" id="nav-users" class="nav-link w-full flex items-center gap-4 px-6 py-4 text-slate-400 transition-all">
+                <i class="fa-solid fa-users-viewfinder"></i> View Users
+            </button>
+            <div class="pt-10">
+                <button onclick="logout()" class="w-full flex items-center gap-4 px-6 py-4 text-red-400 hover:bg-red-50 rounded-2xl font-bold transition-all">
+                    <i class="fa-solid fa-power-off"></i> Logout
+                </button>
+            </div>
+        </nav>
+    </aside>
+
+    <main id="main-content" class="hidden ml-72 flex-1 p-10">
+        
+        <section id="page-overview" class="page-view active">
+            <div class="mb-10">
+                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Security Verified</p>
+                <h2 class="text-3xl font-black">Executive Dashboard</h2>
+            </div>
+            <div class="grid grid-cols-3 gap-6 mb-10">
+                <div class="glass-card p-6 flex items-center gap-6 border-l-4 border-kihlot-primary cursor-pointer hover:scale-[1.02] transition-transform" onclick="showPage('users')">
+                    <div class="w-14 h-14 bg-kihlot-light text-kihlot-primary rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-users"></i></div>
+                    <div><p class="text-xs font-black text-slate-400 uppercase">Total Users</p><h3 class="text-2xl font-black" id="stat-users">0</h3></div>
+                </div>
+                <div class="glass-card p-6 flex items-center gap-6 border-l-4 border-kihlot-primary">
+                    <div class="w-14 h-14 bg-kihlot-light text-kihlot-primary rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-toolbox"></i></div>
+                    <div><p class="text-xs font-black text-slate-400 uppercase">Providers</p><h3 class="text-2xl font-black" id="stat-providers">0</h3></div>
+                </div>
+                <div class="glass-card p-6 flex items-center gap-6 border-l-4 border-orange-400">
+                    <div class="w-14 h-14 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center text-2xl"><i class="fa-solid fa-star"></i></div>
+                    <div><p class="text-xs font-black text-slate-400 uppercase">Avg Rating</p><h3 id="stat-avg" class="text-2xl font-black">—</h3></div>
+                </div>
+            </div>
+            <div class="glass-card p-8">
+                <h4 class="font-bold mb-6 text-slate-700">Service Activity Trends</h4>
+                <div class="h-64 relative">
+                    <canvas id="mainTrendChart" style="display:none;"></canvas>
+                    <div id="chart-empty" class="absolute inset-0 flex items-center justify-center text-slate-400">No activity to display</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-add" class="page-view">
+            <div class="glass-card p-12 max-w-5xl mx-auto">
+                <div class="mb-10 flex justify-between items-start">
+                    <div>
+                        <h2 id="form-title" class="text-3xl font-black text-[#1b2559]">Add Service Provider</h2>
+                        <p id="form-subtitle" class="text-slate-400 font-medium mt-1">Register a new service provider to the platform</p>
+                    </div>
+                </div>
+                <form id="providerForm" class="grid grid-cols-2 gap-x-10 gap-y-8">
+                    <div class="space-y-1">
+                        <label>Full Name *</label>
+                        <input type="text" id="pName" placeholder="Enter full name" required minlength="3">
+                    </div>
+                    <div class="space-y-1">
+                        <label>Email *</label>
+                        <input type="email" id="pEmail" placeholder="Enter email address" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label>Phone Number *</label>
+                        <input type="text" id="pPhone" placeholder="0912345678" maxlength="10" required>
+                        <span id="phone-error" class="text-[10px] text-red-500 font-bold uppercase hidden">Must start with 09/07 (10 digits)</span>
+                    </div>
+                    <div class="space-y-1">
+                        <label>Service Category *</label>
+                        <select id="pService" required>
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Electrical">⚡ ELECTRICIAN</option>
+                            <option value="Mechanics">🔧 MECHANIC</option>
+                            <option value="Cleaning">🧹 CLEANER</option>
+                            <option value="Painting_contractor">🎨 PAINTING CONTRACTOR</option>
+                            <option value="Carpentry">🔨 CARPENTER</option>
+                            <option value="Plumbing">🚰 PLUMBER</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2 space-y-1">
+                        <label>Profile Picture (upload from device)</label>
+                        <div class="flex gap-4 items-center">
+                            <input type="file" id="pImgFile" accept="image/*">
+                            <div class="w-16 h-16 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50 shrink-0">
+                                <img id="pImgPreview" src="" class="hidden w-full h-full object-cover">
+                                <i id="pImgPlaceholder" class="fa-solid fa-image text-slate-300"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2 space-y-1">
+                        <label>Verification Document (upload from device)</label>
+                        <div class="flex gap-4 items-center">
+                            <input type="file" id="pVerifFile" accept="image/*">
+                            <div class="w-16 h-16 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50 shrink-0">
+                                <img id="pVerifPreview" src="" class="hidden w-full h-full object-cover">
+                                <i id="pVerifPlaceholder" class="fa-solid fa-file text-slate-300"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400">Accepted: images only. Max ~500KB. (Optional)</p>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label>National ID (FAN/FIN) *</label>
+                        <div class="flex gap-2">
+                            <select id="pIdPrefix" class="!w-1/3" required>
+                                <option value="FAN">FAN</option>
+                                <option value="FIN">FIN</option>
+                            </select>
+                            <input type="text" id="pIdNumber" placeholder="Digits only" required>
+                        </div>
+                        <span id="id-error" class="text-[10px] text-red-500 font-bold uppercase hidden">FAN: 16 digits | FIN: 12 digits</span>
+                    </div>
+                    <div class="space-y-1">
+                        <label>Location *</label>
+                        <input type="text" id="pLoc" placeholder="Addis Ababa, Bole" required>
+                    </div>
+                    <div class="col-span-2 space-y-1">
+                        <label>Bio *</label>
+                        <textarea id="pBio" rows="4" placeholder="Brief description of experience" required></textarea>
+                    </div>
+                    <div class="col-span-2 flex gap-4 pt-4">
+                        <button type="button" onclick="showPage('edit')" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-all">Cancel Action</button>
+                        <button type="submit" id="submitBtn" disabled class="flex-[2] py-4 bg-kihlot-primary text-white rounded-2xl font-bold text-lg hover:bg-kihlot-hover shadow-lg transition-all">Register Provider</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="page-edit" class="page-view">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold">Service Directory</h2>
+                <div class="glass-card p-2 flex items-center border border-slate-100 w-72">
+                    <i class="fa-solid fa-magnifying-glass text-slate-300 ml-3 mr-2"></i>
+                    <input type="text" id="editSearch" onkeyup="filterDirectory()" placeholder="Filter by name or service..." class="!border-0 !p-1 !bg-transparent text-sm outline-none">
+                </div>
+            </div>
+            <div id="directory-container" class="space-y-4"></div>
+        </section>
+
+        <section id="page-users" class="page-view">
+            <div class="mb-8 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-[#1b2559]">Registered Users</h2>
+                    <p class="text-slate-400 text-sm">Full list of customers currently on the platform</p>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full user-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email Address</th>
+                                <th>Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- DOM SELECTORS ---
+        const loginForm = document.getElementById('loginForm');
+        const adminEmailInput = document.getElementById('adminEmail');
+        const adminPassInput = document.getElementById('adminPass');
+        const API_BASE = "http://localhost:5000";
+
+        // Helper to get auth token from common keys
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('jwt') || localStorage.getItem('kehlotToken') || localStorage.getItem('access_token') || null;
+        }
+
+        // --- INITIALIZATION ---
+        function initAdminPage() {
+            // Clear any locally stored tokens to require explicit credential entry on every page load
+            ['authToken','token','jwt','kehlotToken','access_token'].forEach(k => localStorage.removeItem(k));
+            // Reset login form and ensure login gate is visible by default
+            resetLoginForm();
+            document.getElementById('login-gate').style.display = '';
+            document.getElementById('main-sidebar').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+            console.log('Admin page initialized: login required.');
+        }
+
+        // --- FORM RESET LOGIC ---
+        function resetLoginForm() {
+            // WHY: Prevent browser from retaining email/password values on page load/refresh/navigation
+            // Explicitly clear input values to ensure empty fields
+            adminEmailInput.value = '';
+            adminPassInput.value = '';
+            
+            // Reset form state for consistency
+            if (loginForm) {
+                loginForm.reset();
+            }
+            
+            // Disable browser autofill and saved credentials
+            adminEmailInput.setAttribute('autocomplete', 'off');
+            adminPassInput.setAttribute('autocomplete', 'new-password');
+        }
+
+        // --- EVENT HANDLERS ---
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const email = adminEmailInput.value.trim();
+            const pass = adminPassInput.value;
+
+            if (!email || !pass) return showToast('Please fill in all fields', 'error');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password: pass })
+                });
+
+                const ct = res.headers.get('content-type') || '';
+                let data = {};
+                if (ct.includes('application/json')) {
+                    data = await res.json().catch(() => ({}));
+                } else {
+                    // Could be HTML error page or plain text
+                    const text = await res.text().catch(() => '');
+                    data = { message: text };
+                }
+
+                if (!res.ok) {
+                    // Capture diagnostics for server-side investigation
+                    window.lastLoginError = {
+                        status: res.status,
+                        statusText: res.statusText,
+                        contentType: ct,
+                        bodyPreview: (typeof data === 'object' ? data.message : String(data)).slice(0, 200)
+                    };
+                    console.error('admin login failed:', window.lastLoginError, 'response body:', data);
+
+                    if (res.status >= 500) {
+                        showToast('Internal server error during login. Check server logs and try again.', 'error');
+                    } else {
+                        showToast(data.message || 'Access Denied: Invalid Credentials', 'error');
+                    }
+                    return;
+                }
+
+                // Save token if provided (support multiple possible response shapes)
+                const tokenFromResp = data.token || data.accessToken || (data.data && data.data.token) || (data.token && data.token.token);
+                if (tokenFromResp) {
+                    localStorage.setItem('authToken', tokenFromResp);
+                    localStorage.setItem('token', tokenFromResp);
+                }
+                console.log('admin login response:', data, 'storedToken:', tokenFromResp);
+
+                // Reveal the admin UI immediately to make login feel responsive
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('main-sidebar').classList.remove('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+
+                syncUI();
+                renderUsers();
+
+                // Run verification and heavy dashboard initialization in the background so the UI appears fast
+                (async () => {
+                    try {
+                        const verified = await verifyAuth();
+                        if (!verified) {
+                            // If verification fails, clear stored tokens and revert UI
+                            localStorage.removeItem('authToken');
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('jwt');
+                            showToast('Authentication failed. Please try signing in again.', 'error');
+
+                            // Revert UI to login state
+                            document.getElementById('login-gate').style.display = 'block';
+                            document.getElementById('main-sidebar').classList.add('hidden');
+                            document.getElementById('main-content').classList.add('hidden');
+                            return;
+                        }
+                    } catch (err) {
+                        console.error('verifyAuth error in background:', err);
+                        // Do not block the UI; let the individual components handle errors
+                    }
+
+                    // Load stats and chart asynchronously
+                    loadDashboardStats().catch(err => {
+                        console.error('loadDashboardStats error:', err);
+                        showToast('Failed to load dashboard stats.', 'warning');
+                    });
+                    initChart().catch(err => {
+                        console.error('initChart error:', err);
+                    });
+                })();
+
+                showToast(data.message || 'Executive Authentication Successful.', 'success');
+            } catch (err) {
+                console.error('admin login error:', err);
+                window.lastLoginError = { networkError: true, error: (err && err.message) || String(err) };
+                showToast('Network error. Please try again.', 'error');
+            }
+        }
+
+        // Debug helper to run a quick login test from console (doesn't update UI)
+        window.testAdminLogin = async function(email, pass) {
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password: pass })
+                });
+                const ct = res.headers.get('content-type') || '';
+                const body = ct.includes('application/json') ? await res.json().catch(()=>({})) : { message: await res.text().catch(()=>'') };
+                console.log('testAdminLogin:', res.status, res.statusText, body);
+                return { status: res.status, body };
+            } catch (err) {
+                console.error('testAdminLogin error', err);
+                return { networkError:true, error: (err && err.message) || String(err) };
+            }
+        };
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(message, type) {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                ${message}
+            `;
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- CONFIRM MODAL ---
+        function showConfirmModal(message, options = {}) {
+            return new Promise((resolve) => {
+                let modal = document.getElementById('confirm-modal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'confirm-modal';
+                    modal.className = 'fixed inset-0 z-[110] flex items-center justify-center bg-black/40';
+                    modal.innerHTML = `
+                        <div class="glass-card p-6 max-w-md w-full mx-4">
+                            <h3 id="confirm-modal-title" class="text-lg font-bold mb-2">Confirm</h3>
+                            <p id="confirm-modal-message" class="text-sm text-slate-600 mb-6"></p>
+                            <div class="flex justify-end gap-3">
+                                <button id="confirm-modal-cancel" class="px-4 py-2 bg-white rounded-lg border text-slate-600">Cancel</button>
+                                <button id="confirm-modal-confirm" class="px-4 py-2 bg-kihlot-primary text-white rounded-lg">Confirm</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+
+                const msgEl = modal.querySelector('#confirm-modal-message');
+                const titleEl = modal.querySelector('#confirm-modal-title');
+                const btnOk = modal.querySelector('#confirm-modal-confirm');
+                const btnCancel = modal.querySelector('#confirm-modal-cancel');
+
+                titleEl.innerText = options.title || 'Confirm';
+                msgEl.innerText = message;
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    btnOk.onclick = null;
+                    btnCancel.onclick = null;
+                    modal.onclick = null;
+                };
+
+                btnOk.onclick = (e) => { e.stopPropagation(); cleanup(); resolve(true); };
+                btnCancel.onclick = (e) => { e.stopPropagation(); cleanup(); resolve(false); };
+                modal.onclick = (e) => { if (e.target === modal) { cleanup(); resolve(false); } };
+
+                modal.classList.remove('hidden');
+                // focus confirm button
+                setTimeout(() => btnOk.focus(), 50);
+            });
+        }
+
+        // Persistent toast with close (X) button — does not auto-dismiss until user clicks the X
+        function showPersistentToast(message, type) {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+
+            // Left content (icon + message)
+            const left = document.createElement('div');
+            left.style.display = 'flex';
+            left.style.alignItems = 'center';
+            left.style.gap = '12px';
+            left.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i><div style="font-weight:600">${message}</div>`;
+
+            // Close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.setAttribute('aria-label', 'Dismiss message');
+            closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            closeBtn.onclick = () => {
+                toast.style.animation = 'slideOut 0.2s ease';
+                setTimeout(() => toast.remove(), 200);
+            };
+
+            toast.appendChild(left);
+            // Add copy button if the message contains 'Temporary password:'
+            if (String(message).includes('Temporary password:')) {
+                const parts = String(message).split('Temporary password:');
+                const pwd = parts[1] ? parts[1].trim() : '';
+                if (pwd) {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'toast-close';
+                    copyBtn.setAttribute('aria-label', 'Copy password');
+                    copyBtn.style.marginRight = '6px';
+                    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i>';
+                    copyBtn.onclick = async () => {
+                        try { await navigator.clipboard.writeText(pwd); copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>'; setTimeout(()=>copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i>', 1500); } catch (e) { console.warn('copy failed', e); }
+                    };
+                    toast.appendChild(copyBtn);
+                }
+            }
+            toast.appendChild(closeBtn);
+            toastContainer.appendChild(toast);
+
+            return {
+                element: toast,
+                dismiss: () => { closeBtn.click(); }
+            };
+        }
+
+        // --- UI HELPERS ---
+        function syncUI() {
+            // Keep provider list UI in sync, but avoid overriding backend-driven stats (stat-providers)
+            renderDirectory();
+            saveProvidersToStorage();
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('page-'+id).classList.add('active');
+            const nav = document.getElementById('nav-'+id);
+            if(nav) nav.classList.add('active');
+
+            // Manage dashboard polling and refresh when overview is opened
+            if (id === 'overview') {
+                loadDashboardStats();
+                initChart();
+                startDashboardPolling();
+            } else {
+                stopDashboardPolling();
+            }
+        }
+
+        // --- DOMContentLoaded INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', initAdminPage);
+
+        // --- FORM SUBMISSION ---
+        loginForm.addEventListener('submit', handleLoginSubmit);
+
+        // --- IMPROVED GOOGLE DRIVE CONVERTER ---
+        // This ensures IDs are extracted even if the link doesn't end in /view
+        function getDirectDriveUrl(url) {
+            if (!url) return "";
+            // Try to extract ID from various Google Drive URL formats
+            let id = null;
+            // Format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+            const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (fileMatch) id = fileMatch[1];
+            // Format: https://drive.google.com/open?id=FILE_ID
+            const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (openMatch) id = openMatch[1];
+            // If already a direct link, extract id
+            if (!id) {
+                const ucMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                if (ucMatch) id = ucMatch[1];
+            }
+            if (id) {
+                return `https://drive.google.com/uc?export=view&id=${id}`;
+            }
+            return url; 
+        }
+
+        // --- GLOBAL STATE ---
+        let editingProviderId = null;
+        // Image data for current form session (base64). If null, no new file selected.
+        let currentImageBase64 = null;
+        // Verification document (base64) for current form session
+        let currentVerificationBase64 = null;
+
+        // Providers list (populated from server). Keep a local fallback for offline dev.
+        let providers = [];
+        // When editing a provider, remember the original email so we don't accidentally try to update it when unchanged
+        let originalEditingEmail = null;
+
+        async function fetchProviders() {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                const token = getAuthToken();
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const res = await fetch(`${API_BASE}/api/admin/providers`, { headers, credentials: 'include' });
+                if (!res.ok) {
+                    const text = await res.text().catch(() => '');
+                    console.warn('fetchProviders failed', res.status, text);
+                    showToast('Failed to load providers list from server', 'error');
+                    return;
+                }
+
+                const data = await res.json().catch(() => []);
+                // Normalize server shape to UI-friendly shape
+                providers = data.map(p => {
+                    const id = p.id || (p.user && p.user.id) || p.userId;
+                    const name = p.fullName || (p.user && p.user.fullName) || p.name || '';
+                    const email = p.email || (p.user && p.user.email) || '';
+                    const service = p.serviceType || p.service || '';
+                    const loc = p.location || p.loc || '';
+                    const phone = p.phone || '';
+                    const bio = p.bio || '';
+                    const img = p.profileImage || p.img || (name ? `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0F98B3&color=fff` : '');
+                    const faydaId = p.faydaId || p.fayda_id || '';
+                    const verificationDoc = p.verificationDoc || p.verification_doc || null;
+                    const idPrefix = faydaId && faydaId.length === 16 ? 'FAN' : (faydaId && faydaId.length === 12 ? 'FIN' : 'FAN');
+                    const idNumber = faydaId || '';
+                    return { id, name, fullName: name, email, service, loc, phone, bio, img, imgBase64: null, idPrefix, idNumber, faydaId, verificationDoc };
+                });
+
+                saveProvidersToStorage();
+                renderDirectory();
+            } catch (err) {
+                console.error('fetchProviders error', err);
+                showToast('Failed to load providers', 'error');
+            }
+        }
+
+        // Fetch registered users (role: USER) from server and render
+        async function fetchUsers() {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                const token = getAuthToken();
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const res = await fetch(`${API_BASE}/api/admin/users`, { headers, credentials: 'include' });
+                if (!res.ok) {
+                    const text = await res.text().catch(() => '');
+                    console.warn('fetchUsers failed', res.status, text);
+                    showToast('Failed to load users from server', 'error');
+                    return;
+                }
+
+                users = await res.json().catch(() => []);
+                renderUsers();
+            } catch (err) {
+                console.error('fetchUsers error', err);
+                showToast('Failed to load users', 'error');
+            }
+        }
+
+        function saveProvidersToStorage() {
+            try { localStorage.setItem('providers', JSON.stringify(providers)); } catch (e) { console.warn('Failed saving providers', e); }
+        }
+        // Users (server-backed)
+        let users = []; // populated by fetchUsers()
+
+        // --- ICON LOOKUP FUNCTION ---
+        const getIcon = (service) => {
+            const icons = {
+                'ELECTRICIAN': 'fa-bolt', 
+                'MECHANIC': 'fa-screwdriver-wrench', 
+                'CLEANER': 'fa-broom',
+                'PAINTING_CONTRACTOR': 'fa-palette', 
+                'CARPENTER': 'fa-hammer', 
+                'PLUMBER': 'fa-faucet'
+            };
+            return icons[service] || 'fa-user-gear';
+        };
+
+        // --- LIVE PREVIEW & FILE UPLOAD LOGIC ---
+        const fileInput = document.getElementById('pImgFile');
+        const imgPreview = document.getElementById('pImgPreview');
+        const imgPlaceholder = document.getElementById('pImgPlaceholder');
+
+        const MAX_IMAGE_BYTES = 70000; // Reduced to ~70KB to fit default Express JSON limit (100KB)
+
+        // Compress image file to a JPEG data URL under size/quality constraints
+        function compressImage(file, maxWidth = 1024, quality = 0.8) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = (e) => { img.src = e.target.result; };
+                reader.onerror = reject;
+                img.onerror = reject;
+                img.onload = () => {
+                    const ratio = Math.min(1, maxWidth / Math.max(img.width, img.height));
+                    const w = Math.round(img.width * ratio);
+                    const h = Math.round(img.height * ratio);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    // Use JPEG for better compression unless original is png and has transparency
+                    const outputType = 'image/jpeg';
+                    let out = canvas.toDataURL(outputType, quality);
+
+                    // If still too large, progressively reduce quality
+                    let currentQuality = quality;
+                    while ((out.length * 3 / 4) > MAX_IMAGE_BYTES && currentQuality > 0.1) {
+                        currentQuality -= 0.15; // Aggressive compression step for speed
+                        out = canvas.toDataURL(outputType, currentQuality);
+                    }
+
+                    resolve(out);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Convert a data URL (base64) to a Blob for multipart/form-data uploads
+        function dataURLToBlob(dataURL) {
+            if (!dataURL || typeof dataURL !== 'string') return null;
+            const parts = dataURL.split(',');
+            if (parts.length < 2) return null;
+            const meta = parts[0];
+            const b64 = parts[1];
+            const contentTypeMatch = meta.match(/:(.*?);/);
+            const contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/jpeg';
+            try {
+                const byteString = atob(b64);
+                const ia = new Uint8Array(byteString.length);
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                return new Blob([ia], { type: contentType });
+            } catch (err) {
+                console.error('dataURLToBlob error', err);
+                return null;
+            }
+        }
+
+        // When a file is chosen, compress and show preview
+        fileInput.addEventListener('change', async (ev) => {
+            const file = ev.target.files && ev.target.files[0];
+            if (!file) {
+                // cleared selection
+                currentImageBase64 = null;
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+                imgPlaceholder.classList.remove('hidden');
+                return;
+            }
+
+            // Validate basic file type
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file.', 'error');
+                fileInput.value = '';
+                return;
+            }
+
+            try {
+                const compressed = await compressImage(file);
+                // If compressed still too large, reject and ask user to pick smaller image
+                const approxBytes = Math.round((compressed.length * 3) / 4);
+                if (approxBytes > MAX_IMAGE_BYTES) {
+                    showToast('Selected image is too large. Please choose a smaller image (max ~70KB).', 'error');
+                    fileInput.value = '';
+                    currentImageBase64 = null;
+                    imgPreview.src = '';
+                    imgPreview.classList.add('hidden');
+                    imgPlaceholder.classList.remove('hidden');
+                    return;
+                }
+
+                currentImageBase64 = compressed; // data:image/jpeg;base64,...
+                imgPreview.src = currentImageBase64;
+                imgPreview.classList.remove('hidden');
+                imgPlaceholder.classList.add('hidden');
+            } catch (err) {
+                console.error('image compression error', err);
+                showToast('Failed to process image. Try a different file.', 'error');
+                fileInput.value = '';
+            }
+        });
+
+        // Verification document file handlers (same behavior as profile image)
+        const verifInput = document.getElementById('pVerifFile');
+        const verifPreview = document.getElementById('pVerifPreview');
+        const verifPlaceholder = document.getElementById('pVerifPlaceholder');
+
+        verifInput.addEventListener('change', async (ev) => {
+            const file = ev.target.files && ev.target.files[0];
+            if (!file) {
+                currentVerificationBase64 = null;
+                verifPreview.src = '';
+                verifPreview.classList.add('hidden');
+                verifPlaceholder.classList.remove('hidden');
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file for verification document.', 'error');
+                verifInput.value = '';
+                return;
+            }
+
+            try {
+                const compressed = await compressImage(file);
+                const approxBytes = Math.round((compressed.length * 3) / 4);
+                if (approxBytes > MAX_IMAGE_BYTES) {
+                    showToast('Selected verification document is too large. Please choose a smaller file (max ~70KB).', 'error');
+                    verifInput.value = '';
+                    currentVerificationBase64 = null;
+                    verifPreview.src = '';
+                    verifPreview.classList.add('hidden');
+                    verifPlaceholder.classList.remove('hidden');
+                    return;
+                }
+
+                currentVerificationBase64 = compressed;
+                verifPreview.src = currentVerificationBase64;
+                verifPreview.classList.remove('hidden');
+                verifPlaceholder.classList.add('hidden');
+            } catch (err) {
+                console.error('verification image compression error', err);
+                showToast('Failed to process verification document. Try a different file.', 'error');
+                verifInput.value = '';
+            }
+        });
+
+        // --- FORM SUBMISSION ---
+        async function normalizeServiceType(input) {
+            if (!input) return null;
+            const s = String(input).toLowerCase();
+            if (s.includes('electric')) return 'ELECTRICIAN';
+            if (s.includes('mechanic')) return 'MECHANIC';
+            if (s.includes('clean')) return 'CLEANER';
+            if (s.includes('paint')) return 'PAINTING_CONTRACTOR';
+            if (s.includes('carpent')) return 'CARPENTER';
+            if (s.includes('plumb')) return 'PLUMBER';
+            return null;
+        }
+
+        // Verify admin session by calling a protected endpoint. Returns true if server accepts current token/cookie.
+        async function verifyAuth() {
+            try {
+                const headers = {};
+                const token = getAuthToken();
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                console.log('verifyAuth checking with headers', headers, 'document.cookie (may be empty for httpOnly):', document.cookie);
+                const res = await fetch(`${API_BASE}/api/admin/dashboard`, { headers, credentials: 'include' });
+                if (!res.ok) {
+                    console.warn('verifyAuth failed', res.status);
+                    return false;
+                }
+                // Successful verified session
+                return true;
+            } catch (err) {
+                console.error('verifyAuth error', err);
+                return false;
+            }
+        }
+
+        // Quick debug helpers available from console for diagnosis:
+        // - quickAddProvider(): attempts to add a minimal provider without images to isolate the issue.
+        // - checkSession(): verifies session status against /api/admin/dashboard
+        window.quickAddProvider = async function() {
+            const token = getAuthToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const payload = {
+                fullName: 'Debug Provider',
+                email: `debug+${Date.now()}@example.com`,
+                phone: '0911000000',
+                location: 'Test',
+                serviceType: 'PLUMBER',
+                bio: 'Debug',
+                profileImage: 'https://ui-avatars.com/api/?name=Debug&background=0F98B3&color=fff'
+            };
+            console.log('quickAddProvider headers:', headers, 'payload:', payload);
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/provider`, { 
+                    method: 'POST', 
+                    headers, credentials: 'include', 
+                    body: JSON.stringify(payload) 
+                });
+                const text = await res.text();
+                console.log('quickAddProvider response', res.status, res.statusText, text);
+            } catch (err) {
+                console.error('quickAddProvider network error', err);
+            }
+        };
+
+        window.checkSession = async function() {
+            const ok = await verifyAuth();
+            console.log('checkSession =>', ok);
+            return ok;
+        };
+
+        async function registerProvider(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+
+            try {
+                const nameValue = document.getElementById('pName').value.trim();
+
+                // Determine final image values
+                let finalImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameValue)}&background=0F98B3&color=fff`;
+                let finalImgBase64 = null;
+
+                if (currentImageBase64) {
+                    finalImgBase64 = currentImageBase64;
+                    finalImg = currentImageBase64;
+                } else if (editingProviderId) {
+                    const old = providers.find(p => p.id === editingProviderId);
+                    if (old) {
+                        finalImg = old.img || finalImg;
+                        finalImgBase64 = old.imgBase64 || null;
+                    }
+                }
+
+                const idPrefix = document.getElementById('pIdPrefix').value;
+                const idNumber = document.getElementById('pIdNumber').value.trim();
+                
+                // Validate lengths based on prefix
+                if (idPrefix === 'FIN' && idNumber.length !== 12) {
+                    showToast('FIN must be 12 digits', 'error');
+                    return;
+                }
+                if (idPrefix === 'FAN' && idNumber.length !== 16) {
+                    showToast('FAN must be 16 digits', 'error');
+                    return;
+                }
+
+                const rawService = document.getElementById('pService').value;
+                const normalizedService = await normalizeServiceType(rawService) || rawService;
+
+                if (!normalizedService) {
+                    showToast('Please select a valid service type', 'error');
+                    return;
+                }
+
+                const payload = {
+                    fullName: nameValue,
+                    email: document.getElementById('pEmail').value.trim(),
+                    phone: document.getElementById('pPhone').value.trim(),
+                    location: document.getElementById('pLoc').value.trim(),
+                    serviceType: normalizedService,
+                    bio: document.getElementById('pBio').value.trim(),
+                    profileImage: finalImgBase64 ? finalImgBase64 : finalImg,
+                    faydaId: idNumber,
+                    verificationDoc: currentVerificationBase64 ? currentVerificationBase64 : undefined
+                };
+
+                // If editing, avoid sending the email field if it hasn't changed to prevent unique-constraint errors
+                if (editingProviderId && payload.email === originalEditingEmail) {
+                    delete payload.email;
+                }
+
+                // If we're editing an existing provider, call the update endpoint (PUT) and return
+                if (editingProviderId) {
+                    const id = editingProviderId;
+                    const headersUp = { 'Content-Type': 'application/json' };
+                    const token = getAuthToken();
+                    if (token) headersUp['Authorization'] = `Bearer ${token}`;
+
+                    try {
+                        const resUp = await fetch(`${API_BASE}/api/admin/providers/${id}`, { method: 'PUT', headers: headersUp, credentials: 'include', body: JSON.stringify(payload) });
+                        const ct = resUp.headers.get('content-type') || '';
+                        let bodyUp = {};
+                        if (ct.includes('application/json')) bodyUp = await resUp.json().catch(() => ({}));
+                        else bodyUp = { message: await resUp.text().catch(() => '') };
+
+                        if (!resUp.ok) {
+                            console.error('updateProvider failed', resUp.status, bodyUp);
+                            return showToast(bodyUp.message || `Failed to update provider (status ${resUp.status})`, 'error');
+                        }
+
+                        // Refresh list and UI
+                        await fetchProviders();
+                        showToast(bodyUp.message || 'Provider updated successfully', 'success');
+
+                        // Reset form state
+                        editingProviderId = null;
+                        originalEditingEmail = null;
+                        document.getElementById('providerForm').reset();
+                        currentImageBase64 = null;
+                        document.getElementById('pImgFile').value = '';
+                        // Reset verification inputs as well
+                        currentVerificationBase64 = null;
+                        if (document.getElementById('pVerifFile')) document.getElementById('pVerifFile').value = '';
+                        if (document.getElementById('pVerifPreview')) {
+                            document.getElementById('pVerifPreview').src = '';
+                            document.getElementById('pVerifPreview').classList.add('hidden');
+                        }
+                        if (document.getElementById('pVerifPlaceholder')) document.getElementById('pVerifPlaceholder').classList.remove('hidden');
+
+                        validateForm();
+
+                        showPage('edit');
+                        return;
+                    } catch (err) {
+                        console.error('network error during provider update', err);
+                        window.lastProviderError = { phase: 'providerUpdate', error: (err && err.message) || String(err), payload, id: editingProviderId, time: Date.now() };
+                        return showToast('Network error. Please try again.', 'error');
+                    }
+                }
+
+                // Log payload for debugging
+                console.log('registerProvider payload:', payload);
+
+                const token = getAuthToken();
+                if (!token) {
+                    console.warn('No token found in localStorage; proceeding without Authorization header (may rely on cookie-based session).');
+                }
+
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                console.log('registerProvider payload headers:', headers);
+
+                // Helpers for multipart and JSON submission
+                function buildFormDataFromPayload(p) {
+                    const form = new FormData();
+                    form.append('fullName', p.fullName || '');
+                    form.append('email', p.email || '');
+                    form.append('phone', p.phone || '');
+                    form.append('location', p.location || '');
+                    form.append('serviceType', p.serviceType || '');
+                    form.append('bio', p.bio || '');
+                    if (p.faydaId) form.append('faydaId', p.faydaId);
+                    if (p.fanNumber) form.append('fanNumber', p.fanNumber);
+                    return form;
+                }
+
+                async function postFormData(url, method, form) {
+                    try {
+                        const token = getAuthToken();
+
+                        // Append token to form under multiple common field names to maximize server compatibility
+                        try {
+                            if (form && form.append) {
+                                ['authToken', 'token', 'authorization', 'access_token'].forEach(k => {
+                                    try { form.append(k, token); } catch (e) { /* ignore */ }
+                                });
+                            }
+                        } catch (e) { /* ignore */ }
+
+                        // Include Authorization header for servers that require it; add common fallback header too
+                        const headersForm = {};
+                        if (token) {
+                            headersForm['Authorization'] = `Bearer ${token}`; // standard
+                            headersForm['x-access-token'] = token; // some backends expect this
+                        }
+
+                        // Log a small preview of appended form fields (can't log full FormData body)
+                        let formSamples = {};
+                        try { formSamples = { authToken: form.get && form.get('authToken'), token: form.get && form.get('token') }; } catch (e) {}
+
+                        console.log('postFormData: sending form to', url, 'tokenPresent:', !!token, 'headers:', headersForm, 'cookies:', document.cookie, 'formSamples:', formSamples);
+
+                        const resp = await fetch(url, { 
+                            method, 
+                            headers: headersForm, 
+                            credentials: 'include', 
+                            body: form });
+                        const ct = resp.headers.get('content-type') || '';
+                        let body = {};
+                        if (ct.includes('application/json')) body = await resp.json().catch(() => ({}));
+                        else body = { message: await resp.text().catch(() => '') };
+
+                        // Helpful debug for auth failures
+                        if (resp.status === 401 || resp.status === 403) {
+                            console.warn('postFormData auth failed', resp.status, body);
+                        }
+
+                        return { resp, body };
+                    } catch (err) {
+                        console.error('postFormData fetch error', err);
+                        return { networkError: true, error: err };
+                    }
+                }
+
+                async function postJson(url, method, jsonPayload) {
+                    try {
+                        const hdrs = { 'Content-Type': 'application/json' };
+                        const token = getAuthToken();
+                        if (token) {
+                            hdrs['Authorization'] = `Bearer ${token}`;
+                            hdrs['x-access-token'] = token;
+                        }
+                        console.log('postJson: sending json to', url, 'tokenPresent:', !!token);
+                        const resp = await fetch(url, { method, headers: hdrs, credentials: 'include', body: JSON.stringify(jsonPayload) });
+                        const ct = resp.headers.get('content-type') || '';
+                        if (resp.status === 413) {
+                            return { resp, body: { message: 'Image too large for server. Please use a smaller image.' } };
+                        }
+                        let body = {};
+                        if (ct.includes('application/json')) body = await resp.json().catch(() => ({}));
+                        else body = { message: await resp.text().catch(() => '') };
+                        return { resp, body };
+                    } catch (err) {
+                        return { networkError: true, error: err };
+                    }
+                }
+
+                // Variant of postJson that intentionally omits Authorization header (for anonymous create)
+                async function postJsonNoAuth(url, method, jsonPayload) {
+                    try {
+                        const hdrs = { 'Content-Type': 'application/json' };
+                        console.log('postJsonNoAuth: sending json to', url);
+                        const resp = await fetch(url, { method, headers: hdrs, credentials: 'include', body: JSON.stringify(jsonPayload) });
+                        const ct = resp.headers.get('content-type') || '';
+                        if (resp.status === 413) {
+                            return { resp, body: { message: 'Image too large for server. Please use a smaller image.' } };
+                        }
+                        let body = {};
+                        if (ct.includes('application/json')) body = await resp.json().catch(() => ({}));
+                        else body = { message: await resp.text().catch(() => '') };
+                        if (resp.status === 401 || resp.status === 403) console.warn('postJsonNoAuth auth failed', resp.status, body);
+                        return { resp, body };
+                    } catch (err) {
+                        return { networkError: true, error: err };
+                    }
+                }
+
+                let res, data;
+                const urlCreate = `${API_BASE}/api/admin/provider`;
+
+                // Prefer multipart/FormData when images or verification docs are present to avoid JSON size issues
+                const hasImages = !!finalImgBase64 || !!currentVerificationBase64;
+
+                if (editingProviderId) {
+                    const id = editingProviderId;
+                    const updateUrl = `${API_BASE}/api/admin/providers/${id}`;
+
+                    if (hasImages) {
+                        const form = buildFormDataFromPayload(payload);
+                        if (finalImgBase64) {
+                            const imgBlob = dataURLToBlob(finalImgBase64);
+                            if (imgBlob) form.append('profileImage', imgBlob, 'profile.jpg');
+                        }
+                        if (currentVerificationBase64) {
+                            const verBlob = dataURLToBlob(currentVerificationBase64);
+                            if (verBlob) form.append('verificationDoc', verBlob, 'verification.jpg');
+                        }
+
+                        const attempt = await postFormData(updateUrl, 'PUT', form);
+                        if (attempt.networkError) {
+                            console.error('network error during provider update (form)', attempt.error);
+                            window.lastProviderError = { phase: 'providerUpdateForm', error: (attempt.error && attempt.error.message) || String(attempt.error), payload, id, time: Date.now() };
+                            return showToast('Network error. Please try again.', 'error');
+                        }
+                        res = attempt.resp; data = attempt.body;
+
+                        // If server rejected auth for multipart, try a JSON fallback when images are small enough
+                        if (res && (res.status === 401 || res.status === 403)) {
+                            try {
+                                const approxSize = (payload.profileImage ? payload.profileImage.length : 0) + (payload.verificationDoc ? payload.verificationDoc.length : 0);
+                                const MAX_JSON_BASE64 = 800000; // ~800 KB base64 budget
+                                if (approxSize > 0 && approxSize < MAX_JSON_BASE64) {
+                                    console.log('multipart update auth failed; attempting JSON fallback with Authorization header');
+                                    const jsonAttempt = await postJson(updateUrl, 'PUT', payload);
+                                    if (!jsonAttempt.networkError) {
+                                        res = jsonAttempt.res; data = jsonAttempt.body;
+                                    }
+                                }
+                            } catch (e) { console.warn('json fallback during update failed', e); }
+                        }
+                    } else {
+                        const attempt = await postJson(updateUrl, 'PUT', payload);
+                        if (attempt.networkError) {
+                            console.error('network error during provider update (json)', attempt.error);
+                            window.lastProviderError = { phase: 'providerUpdateJson', error: (attempt.error && attempt.error.message) || String(attempt.error), payload, id, time: Date.now() };
+                            return showToast('Network error. Please try again.', 'error');
+                        }
+                        res = attempt.res; data = attempt.body;
+                    }
+                } else {
+                    // Create new provider - use anonymous (no Authorization header) JSON create request
+                    const attempt = await postJsonNoAuth(urlCreate, 'POST', payload);
+                    if (attempt.networkError) {
+                        console.error('network error during provider create (json no-auth)', attempt.error);
+                        window.lastProviderError = { phase: 'providerCreateJsonNoAuth', error: (attempt.error && attempt.error.message) || String(attempt.error), payload, time: Date.now() };
+                        return showToast('Network error. Please try again.', 'error');
+                    }
+                    res = attempt.resp; data = attempt.body;
+                }
+
+                // Final result handling
+                if (!res || !res.ok) {
+                    console.error('registerProvider failed', res ? res.status : 'NO_RESPONSE', res ? res.statusText : '', data);
+                    try { if (res && res.headers) console.debug('response headers:', Object.fromEntries(res.headers.entries())); } catch(e) { /* ignore */ }
+                    // Keep admin UI intact; do not force logout. Provide diagnostic message.
+                    if (res && (res.status === 401 || res.status === 403)) {
+                        // Server rejected the create request due to authentication/authorization. Since create is sent without Authorization header,
+                        // this indicates the server requires authentication to add providers. Notify the admin without forcing UI changes.
+                        showToast(data.message || 'Server rejected the request: authentication required to add providers.', 'error');
+                        return;
+                    }
+                    if (res && res.status === 413) {
+                        showToast('Server rejected the upload: payload too large. Please reduce image sizes and try again.', 'error');
+                        console.warn('registerProvider: server responded 413. lastPayloadSize:', window.lastPayloadSize);
+                        return;
+                    }
+                    if (res && res.status === 409) {
+                        showToast(data.message || 'Conflict: email or other unique field already in use', 'error');
+                        return;
+                    }
+                    return showToast(data.message || `Failed to register provider (status ${res ? res.status : 'NO_RESPONSE'})`, 'error');
+                }
+
+                // Success: show temporary password if provided
+                const temp = data.temporaryPassword || data.temporary_password;
+                const msg = data.message || 'Service provider registered successfully';
+
+                // Use returned provider object if available
+                const created = data.provider || data.data || data.user || payload;
+                if (!created.id) created.id = Date.now();
+
+                if (editingProviderId) {
+                    // If we just updated, refresh the list from server to keep authoritative state
+                    await fetchProviders();
+                    // Updates rarely include a temporary password; use standard toast
+                    showToast(`${msg}${temp ? ' — Temporary password: ' + temp : ''}`, 'success');
+                } else {
+                    // New provider created: prefer server returned object. If not present, re-fetch list.
+                    if (created && created.id) {
+                        providers.unshift(created);
+                        saveProvidersToStorage();
+                        renderDirectory();
+                    } else {
+                        await fetchProviders();
+                    }
+
+                    // If server returned a temporary password, show a persistent toast that the admin must dismiss
+                    if (temp) {
+                        showPersistentToast(`${msg} — Temporary password: ${temp}`, 'success');
+                    } else {
+                        showToast(msg, 'success');
+                    }
+                }
+
+                // Persist and refresh UI
+                syncUI();
+                showPage('edit');
+
+                // Reset form
+                editingProviderId = null;
+                originalEditingEmail = null;
+                document.getElementById('providerForm').reset();
+                currentImageBase64 = null;
+                document.getElementById('pImgFile').value = '';
+                // Reset verification doc inputs
+                currentVerificationBase64 = null;
+                if (document.getElementById('pVerifFile')) document.getElementById('pVerifFile').value = '';
+                if (document.getElementById('pVerifPreview')) {
+                    document.getElementById('pVerifPreview').src = '';
+                    document.getElementById('pVerifPreview').classList.add('hidden');
+                }
+                if (document.getElementById('pVerifPlaceholder')) document.getElementById('pVerifPlaceholder').classList.remove('hidden');
+
+                // Refresh dashboard metrics and chart to reflect new counts
+                await loadDashboardStats();
+                await initChart();
+            } catch (err) {
+                console.error('registerProvider error:', err);
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        }
+
+        // Bind the named handler
+        document.getElementById('providerForm').onsubmit = registerProvider;
+
+        // --- UI HELPERS ---
+        function syncUI() {
+            // Keep provider list UI in sync, but avoid overriding backend-driven stats (stat-providers)
+            renderDirectory();
+            saveProvidersToStorage();
+        }
+
+        async function showPage(id) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('page-'+id).classList.add('active');
+            const nav = document.getElementById('nav-'+id);
+            if(nav) nav.classList.add('active');
+
+            // If user navigates to the overview dashboard, refresh stats and chart and start polling
+            if (id === 'overview') {
+                (async () => {
+                    await loadDashboardStats();
+                    await initChart();
+                    startDashboardPolling();
+                })();
+            } else {
+                // Stop polling when leaving the overview page
+                stopDashboardPolling();
+            }
+
+            // If user navigates to the edit (directory) page, fetch latest providers from server
+            if (id === 'edit') {
+                await fetchProviders();
+            }
+
+            // If user navigates to the users page, fetch users from server
+            if (id === 'users') {
+                await fetchUsers();
+            }
+        }
+
+        function renderDirectory() {
+            const container = document.getElementById('directory-container');
+            const searchTerm = document.getElementById('editSearch').value.toLowerCase();
+            const filtered = providers.filter(p => (p.name || '').toLowerCase().includes(searchTerm) || (p.service || '').toLowerCase().includes(searchTerm));
+            container.innerHTML = filtered.map(p => {
+                const src = p.imgBase64 || p.img || '';
+                const displayService = (p.service || '').replace('_', ' ');
+                const displayLoc = p.loc || p.location || '';
+                return `
+                <div class="glass-card p-5 flex items-center justify-between border border-transparent hover:border-kihlot-primary/20 transition-all">
+                    <div class="flex items-center gap-4">
+                        <img src="${src}" class="w-12 h-12 rounded-xl object-cover bg-slate-50" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iI2Y4ZmFmYyIvPgo8Y2lyY2xlIGN4PSIyNCIgY3k9IjE2IiByPSI2IiBmaWxsPSIjOWNhM2FmIi8+CjxwYXRoIGQ9Ik0xMiAzNmgxNnY0SDEyeiIvPgo8L3N2Zz4='">
+                        <div>
+                            <h4 class="font-bold text-slate-800">${p.name}</h4>
+                            <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                                <i class="fa-solid ${getIcon(p.service)} text-kihlot-primary mr-1"></i> 
+                                ${displayService} • ${displayLoc}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editProvider(${p.id})" class="p-2 text-slate-400 hover:text-kihlot-primary transition-colors"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteProvider(${p.id})" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function editProvider(id) {
+            const p = providers.find(item => item.id === id);
+            if (!p) return;
+            editingProviderId = id;
+            document.getElementById('pName').value = p.fullName || p.name || '';
+            document.getElementById('pEmail').value = p.email || '';
+            document.getElementById('pPhone').value = p.phone || '';
+            // Try to set the select to the service value if it matches an option, otherwise clear
+            const serviceSelect = document.getElementById('pService');
+            try { serviceSelect.value = p.service || ''; } catch(e) { serviceSelect.value = ''; }
+
+            // Restore preview from stored base64 first, otherwise use img URL
+            const previewEl = document.getElementById('pImgPreview');
+            const placeholderEl = document.getElementById('pImgPlaceholder');
+            if (p.imgBase64) {
+                previewEl.src = p.imgBase64;
+                previewEl.classList.remove('hidden');
+                placeholderEl.classList.add('hidden');
+                currentImageBase64 = p.imgBase64;
+            } else if (p.img) {
+                previewEl.src = p.img;
+                previewEl.classList.remove('hidden');
+                placeholderEl.classList.add('hidden');
+                currentImageBase64 = null;
+            } else {
+                previewEl.src = '';
+                previewEl.classList.add('hidden');
+                placeholderEl.classList.remove('hidden');
+                currentImageBase64 = null;
+            }
+
+            // Track original email to avoid accidental updates (prevents P2002 when unchanged)
+            originalEditingEmail = p.email || null;
+
+            // Verification document preview (if exists)
+            const verifPreviewEl = document.getElementById('pVerifPreview');
+            const verifPlaceholderEl = document.getElementById('pVerifPlaceholder');
+            if (p.verificationDoc) {
+                verifPreviewEl.src = p.verificationDoc;
+                verifPreviewEl.classList.remove('hidden');
+                verifPlaceholderEl.classList.add('hidden');
+                currentVerificationBase64 = null;
+            } else if (p.verificationDocBase64) {
+                verifPreviewEl.src = p.verificationDocBase64;
+                verifPreviewEl.classList.remove('hidden');
+                verifPlaceholderEl.classList.add('hidden');
+                currentVerificationBase64 = p.verificationDocBase64;
+            } else {
+                verifPreviewEl.src = '';
+                verifPreviewEl.classList.add('hidden');
+                verifPlaceholderEl.classList.remove('hidden');
+                currentVerificationBase64 = null;
+            }
+
+            // Keep image preview state as set above and mark form as update mode
+            document.getElementById('form-title').innerText = "Update Provider";
+            showPage('add');
+            validateForm();
+        }
+
+        // Prepare the form for adding a new provider
+        function prepareAddMode() {
+            editingProviderId = null;
+            originalEditingEmail = null;
+            document.getElementById('providerForm').reset();
+            // Reset file selection and preview
+            currentImageBase64 = null;
+            if (document.getElementById('pImgFile')) document.getElementById('pImgFile').value = '';
+            if (document.getElementById('pImgPreview')) {
+                document.getElementById('pImgPreview').src = '';
+                document.getElementById('pImgPreview').classList.add('hidden');
+            }
+            if (document.getElementById('pImgPlaceholder')) document.getElementById('pImgPlaceholder').classList.remove('hidden');
+
+            // Reset verification doc inputs
+            currentVerificationBase64 = null;
+            if (document.getElementById('pVerifFile')) document.getElementById('pVerifFile').value = '';
+            if (document.getElementById('pVerifPreview')) {
+                document.getElementById('pVerifPreview').src = '';
+                document.getElementById('pVerifPreview').classList.add('hidden');
+            }
+            if (document.getElementById('pVerifPlaceholder')) document.getElementById('pVerifPlaceholder').classList.remove('hidden');
+
+            document.getElementById('form-title').innerText = "Add Service Provider";
+            showPage('add');
+            validateForm();
+        }
+
+        async function deleteProvider(id) {
+            const ok = await showConfirmModal('Are you sure you want to remove this provider?');
+            if (!ok) return;
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                const token = getAuthToken();
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const res = await fetch(`${API_BASE}/api/admin/provider/${id}`, { method: 'DELETE', headers, credentials: 'include' });
+                const ct = res.headers.get('content-type') || '';
+                let body = {};
+                if (ct.includes('application/json')) body = await res.json().catch(() => ({}));
+                else body = { message: await res.text().catch(() => '') };
+
+                if (!res.ok) {
+                    console.error('deleteProvider failed', res.status, body);
+                    return showToast(body.message || `Failed to delete provider (status ${res.status})`, 'error');
+                }
+
+                await fetchProviders();
+                showToast(body.message || 'Provider deleted', 'success');
+            } catch (err) {
+                console.error('deleteProvider error', err);
+                window.lastProviderError = { phase: 'providerDelete', error: (err && err.message) || String(err), id, time: Date.now() };
+                showToast('Network error. Please try again.', 'error');
+            }
+        }
+
+        function showToast(msg, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'success' ? 'bg-kihlot-primary' : 'bg-red-500'}`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const phoneInput = document.getElementById('pPhone');
+            const idInput = document.getElementById('pIdNumber');
+            const idPrefix = document.getElementById('pIdPrefix');
+            const phoneError = document.getElementById('phone-error');
+            const idError = document.getElementById('id-error');
+            
+            // Phone validation: must start with 09 or 07 and be 10 digits
+            const isPhoneValid = /^(09|07)\d{8}$/.test(phoneInput.value);
+            if (!isPhoneValid && phoneInput.value.length > 0) {
+                phoneInput.classList.add('invalid');
+                phoneError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                phoneInput.classList.remove('invalid');
+                phoneError.classList.add('hidden');
+                if (phoneInput.value.length === 0) isValid = false;
+            }
+            
+            // ID validation: FAN 16 digits, FIN 12 digits
+            const prefix = idPrefix.value;
+            const isIdValid = (prefix === 'FAN' && idInput.value.length === 16) || (prefix === 'FIN' && idInput.value.length === 12);
+            if (!isIdValid && idInput.value.length > 0) {
+                idInput.classList.add('invalid');
+                idError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                idInput.classList.remove('invalid');
+                idError.classList.add('hidden');
+                if (idInput.value.length === 0) isValid = false;
+            }
+            
+            // Other validations
+            if (document.getElementById('pName').value.trim().length < 3) isValid = false;
+            if (!document.getElementById('pEmail').checkValidity()) isValid = false;
+            if (document.getElementById('pService').value === "") isValid = false;
+            if (document.getElementById('pLoc').value.trim() === "") isValid = false;
+            if (document.getElementById('pBio').value.trim() === "") isValid = false;
+            
+            document.getElementById('submitBtn').disabled = !isValid;
+        }
+
+        document.getElementById('providerForm').querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('input', validateForm);
+        });
+
+        // Restrict phone and ID inputs to digits only
+        [document.getElementById('pPhone'), document.getElementById('pIdNumber')].forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && !e.ctrlKey) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Clear ID number when prefix changes
+        document.getElementById('pIdPrefix').addEventListener('change', () => {
+            document.getElementById('pIdNumber').value = '';
+            validateForm();
+        });
+
+        // Inline fallback handler removed to avoid duplicate handling.
+        // Authentication is handled via `handleLoginSubmit` which posts to the backend.
+        // loginForm.addEventListener('submit', handleLoginSubmit); // registered earlier.
+
+        function renderUsers() {
+            const body = document.getElementById('users-table-body');
+            body.innerHTML = users.map(u => {
+                const name = u.fullName || u.name || '';
+                const email = u.email || '';
+                const createdAt = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : (u.date || '—');
+                return `<tr><td>${name}</td><td>${email}</td><td>${createdAt}</td></tr>`;
+            }).join('');
+            document.getElementById('stat-users').innerText = users.length;
+        }
+
+        let dashboardChart = null;
+        let dashboardPollId = null;
+
+        async function loadDashboardStats() {
+            try {
+                const headers = {};
+                const token = localStorage.getItem('authToken');
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const res = await fetch(`${API_BASE}/api/admin/dashboard`, { headers, credentials: 'include' });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    return showToast(data.message || 'Failed to load dashboard data', 'error');
+                }
+
+                document.getElementById('stat-users').innerText = data.users ?? 0;
+                document.getElementById('stat-providers').innerText = data.providers ?? 0;
+                document.getElementById('stat-avg').innerText = data.averageRating != null ? data.averageRating : '—';
+            } catch (err) {
+                console.error('dashboardStats error:', err);
+                showToast('Failed to load dashboard data', 'error');
+            }
+        }
+
+        function startDashboardPolling(intervalMs = 10000) {
+            if (dashboardPollId) return;
+            dashboardPollId = setInterval(async () => {
+                await loadDashboardStats();
+                await initChart();
+            }, intervalMs);
+        }
+
+        function stopDashboardPolling() {
+            if (!dashboardPollId) return;
+            clearInterval(dashboardPollId);
+            dashboardPollId = null;
+        }
+
+        async function initChart(months = 6) {
+            try {
+                const headers = {};
+                const token = localStorage.getItem('authToken');
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const res = await fetch(`${API_BASE}/api/admin/dashboard/user-growth?months=${months}`, { headers, credentials: 'include' });
+                const series = await res.json().catch(() => ([]));
+                if (!res.ok) {
+                    console.error('initChart fetch error:', series);
+                    return showToast(series.message || 'Failed to load trend data', 'error');
+                }
+
+                const labels = series.map(r => r.month);
+                const totals = series.map(r => r.total);
+                const hasData = Array.isArray(series) && series.length > 0 && totals.some(v => v > 0);
+
+                const canvas = document.getElementById('mainTrendChart');
+                const emptyDiv = document.getElementById('chart-empty');
+
+                if (!hasData) {
+                    // Show empty message and hide canvas; destroy chart if exists
+                    canvas.style.display = 'none';
+                    emptyDiv.classList.remove('hidden');
+                    if (dashboardChart) {
+                        dashboardChart.destroy();
+                        dashboardChart = null;
+                    }
+                    return;
+                }
+
+                // Hide empty message and show canvas
+                emptyDiv.classList.add('hidden');
+                canvas.style.display = 'block';
+                const ctx = canvas.getContext('2d');
+
+                if (!dashboardChart) {
+                    dashboardChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{ label: 'Total', data: totals, borderColor: '#0F98B3', backgroundColor: 'rgba(15, 152, 179, 0.1)', fill: true, tension: 0.4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+                    });
+                } else {
+                    dashboardChart.data.labels = labels;
+                    dashboardChart.data.datasets[0].data = totals;
+                    dashboardChart.update();
+                    dashboardChart.resize();
+                }
+            } catch (err) {
+                console.error('getUserGrowth error:', err);
+                showToast('Failed to load trend data', 'error');
+            }
+        }
+
+        function filterDirectory() { renderDirectory(); }
+        async function logout() {
+            // Confirm with the admin to avoid accidental sign-outs
+            const ok = await showConfirmModal('Are you sure you want to sign out?');
+            if (!ok) return;
+            try {
+                const role = 'ADMIN';
+                const headers = { 'Content-Type': 'application/json' };
+                const token = getAuthToken();
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const res = await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers, credentials: 'include', body: JSON.stringify({ role }) });
+                const ct = res.headers.get('content-type') || '';
+                let body = {};
+                if (ct.includes('application/json')) body = await res.json().catch(() => ({}));
+                else body = { message: await res.text().catch(() => '') };
+
+                // Clear local tokens/cached state regardless of server response
+                ['authToken','token','jwt','kehlotToken','access_token'].forEach(k => localStorage.removeItem(k));
+                // Hide admin UI and show login gate
+                document.getElementById('main-sidebar').classList.add('hidden');
+                document.getElementById('main-content').classList.add('hidden');
+                document.getElementById('login-gate').style.display = '';
+
+                if (!res.ok) {
+                    console.warn('logout failed', res.status, body);
+                    showToast(body.message || 'Failed to logout cleanly', 'error');
+                    return;
+                }
+
+                showToast(body.message || 'Logged out successfully', 'success');
+            } catch (err) {
+                console.error('logout error', err);
+                // still clear local state and show login
+                ['authToken','token','jwt','kehlotToken','access_token'].forEach(k => localStorage.removeItem(k));
+                document.getElementById('main-sidebar').classList.add('hidden');
+                document.getElementById('main-content').classList.add('hidden');
+                document.getElementById('login-gate').style.display = '';
+                showToast('Network error during logout. You may need to close the browser to fully sign out.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
